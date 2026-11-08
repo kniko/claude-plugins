@@ -1,0 +1,25 @@
+---
+name: status
+description: Read-only report of the model, advisor, subagents, delegation rules and deny rules that apply in this repository, and where each setting comes from.
+disable-model-invocation: true
+---
+
+# repo-mode status
+
+Read-only. Do not create, edit, or delete anything. Talk to the user in the language they use (default: Greek).
+
+1. Read, if present: `.claude/repo-mode.json`, `.claude/settings.local.json`, `.claude/settings.json`, `~/.claude/settings.json`, `CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`, and the list of `.claude/agents/*.md` (note which contain `<!-- managed by repo-mode -->`).
+2. Work out the effective value of `model` and `advisorModel` using the precedence local > project > user (managed settings and command-line flags can override all of these; say that you can't see those from files). Show each with the file it comes from.
+3. Report in a short table:
+   - repo-mode: on (scope, date from the state file) / off / partial (traces without a state file).
+   - Main model and advisor, with source file.
+   - Subagents in `.claude/agents/`, their `model`, and whether repo-mode manages them.
+   - Delegation rules block: present in which file / absent.
+   - `permissions.deny` Read rules, and which of them repo-mode added.
+   - Code-intelligence plugin recorded by repo-mode, if any.
+4. Flag problems:
+   - Advisor/main pairs that the pairing table in `${CLAUDE_PLUGIN_ROOT}/skills/setup/reference.md` rejects (e.g. Opus main + Sonnet advisor, Haiku as advisor).
+   - `model` / `advisorModel` set globally in `~/.claude/settings.json` (applies to every repo where repo-mode is off).
+   - Files listed in the state file that no longer exist, or managed agents/blocks with no state file.
+   - Personal-scope files that `git status --porcelain` shows as untracked or modified (i.e. not excluded and could be committed by mistake).
+5. Remind the user that the live session is the final word: `/status` shows the model and which settings files loaded, and an `Advisor Tool (experimental) is on` notification at session start means the advisor is active. Changing the advisor through the `/advisor` picker saves it globally (every repo), so use `/repo-mode:setup` instead.

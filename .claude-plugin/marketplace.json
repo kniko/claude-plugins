@@ -1,0 +1,14 @@
+{
+  "name": "kniko-tools",
+  "description": "Claude Code plugins by kniko",
+  "owner": {
+    "name": "kniko"
+  },
+  "plugins": [
+    {
+      "name": "repo-mode",
+      "source": "./plugins/repo-mode",
+      "description": "Per-repo model/advisor/subagent setup wizard: /repo-mode:setup, /repo-mode:status, /repo-mode:off"
+    }
+  ]
+}

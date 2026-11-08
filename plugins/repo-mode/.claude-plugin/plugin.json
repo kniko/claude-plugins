@@ -1,0 +1,10 @@
+{
+  "name": "repo-mode",
+  "version": "1.0.0",
+  "description": "Per-repo model/advisor/subagent setup wizard: /repo-mode:setup, /repo-mode:status, /repo-mode:off",
+  "author": {
+    "name": "kniko"
+  },
+  "repository": "https://github.com/kniko/claude-plugins",
+  "license": "MIT"
+}
