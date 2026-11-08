@@ -2,6 +2,32 @@
 
 Οδηγός (wizard) για Claude Code που ρυθμίζει **ανά repository** ποιο model κάνει ποια δουλειά: το κύριο model και το effort του, τον advisor, βοηθητικούς subagents με φθηνότερα models, κανόνες ανάθεσης, Read deny rules και code-intelligence plugin. Δεν γράφει τίποτα πριν εγκρίνεις ολόκληρο το σχέδιο, και το `/repo-mode:off` αναιρεί ακριβώς ό,τι έγραψε.
 
+## Εγκατάσταση
+
+Στο terminal (μία φορά, για όλα τα repos):
+
+```bash
+claude plugin marketplace add kniko/claude-plugins
+claude plugin install repo-mode@kniko-tools
+```
+
+Μετά ξεκίνα νέο session Claude Code και τρέξε `/repo-mode:setup` μέσα στο repo που θέλεις να ρυθμίσεις.
+
+| Θέλω να… | Εντολή |
+|---|---|
+| πάρω νεότερη έκδοση | `claude plugin marketplace update kniko-tools` και μετά `claude plugin update repo-mode@kniko-tools` |
+| δω αν είναι εγκατεστημένο | `claude plugin list` (πρέπει να δείχνει `repo-mode@kniko-tools`) |
+| το αφαιρέσω | πρώτα `/repo-mode:off` σε κάθε repo όπου το έτρεξες, μετά `claude plugin uninstall repo-mode@kniko-tools` |
+
+Αν το είχες εγκαταστήσει παλιότερα από zip ή τοπικό φάκελο (`repo-mode@local-tools`), αφαίρεσέ το πρώτα:
+
+```bash
+claude plugin uninstall repo-mode@local-tools
+claude plugin marketplace remove local-tools
+```
+
+Το plugin μπαίνει σε user scope, άρα οι εντολές είναι διαθέσιμες σε κάθε repo. Από μόνο του δεν αλλάζει τίποτα σε κανένα repo: τις αλλαγές τις κάνει μόνο το `/repo-mode:setup`, και μόνο στο repo όπου το τρέχεις.
+
 ## Γιατί αξίζει
 
 Χωρίς ρυθμίσεις, το Claude Code τρέχει σχεδόν όλη τη δουλειά στο ίδιο (συνήθως το ακριβότερο) model. Το repo-mode μοιράζει τη δουλειά με βάση τα docs και τις οδηγίες της Anthropic:
@@ -54,17 +80,6 @@ flowchart TD
 ```
 
 Στην έγκριση μπορείς και να αλλάξεις απαντήσεις: ο wizard γυρίζει στον Γύρο 1. Μη επιτρεπτός συνδυασμός model/advisor ξαναρωτιέται στον ίδιο γύρο. Στο scope «Όλη η ομάδα» τα αρχεία είναι `.claude/settings.json` και `CLAUDE.md`, για commit.
-
-## Εγκατάσταση (μία φορά)
-
-```bash
-claude plugin marketplace add kniko/claude-plugins
-claude plugin install repo-mode@kniko-tools
-```
-
-Ενημέρωση σε νεότερη έκδοση: `claude plugin marketplace update kniko-tools`.
-
-Το plugin μπαίνει σε user scope, άρα οι εντολές είναι διαθέσιμες σε κάθε repo. Από μόνο του δεν αλλάζει τίποτα σε κανένα repo: τις αλλαγές τις κάνει μόνο το `/repo-mode:setup`, και μόνο στο repo όπου το τρέχεις.
 
 ## Εντολές
 
