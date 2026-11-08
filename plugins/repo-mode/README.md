@@ -24,16 +24,17 @@
 ```mermaid
 flowchart LR
     U(["Εσύ"]) --> M["Κύριο session<br/>Sonnet · effort medium"]
-    M -.->|"σημεία απόφασης: πριν το πλάνο,<br/>σε επαναλαμβανόμενο λάθος, πριν το «τελείωσα»"| A[["Advisor<br/>Opus"]]
-    A -.->|"συμβουλή"| M
-    M -->|"αναζήτηση σε 10+ αρχεία"| E["Explore<br/>Haiku · effort low<br/>Read, Grep, Glob"]
-    M -->|"πλήρη tests, build, logs"| T["test-runner<br/>Haiku · effort low<br/>+ Bash"]
-    M -->|"πριν το «τελείωσα»"| R["audit<br/>Sonnet · effort high<br/>read-only review του diff"]
-    M -->|"άλλες δουλειές"| G["general-purpose / Plan<br/>CLAUDE_CODE_SUBAGENT_MODEL"]
-    E -->|"σύντομη απάντηση + path:line"| M
-    T -->|"μόνο τα failures, αυτολεξεί"| M
-    R -->|"ευρήματα ορθότητας με αποδείξεις"| M
-    G -->|"σύνοψη"| M
+    M -.->|"σημεία απόφασης"| A[["Advisor · Opus<br/>δίνει πλάνο / διόρθωση"]]
+    subgraph SA ["Subagents · δικό τους context"]
+        E["Explore · Haiku · low<br/>→ path:line"]
+        T["test-runner · Haiku · low<br/>→ μόνο τα failures"]
+        R["audit · Sonnet · high<br/>→ ευρήματα + αποδείξεις"]
+        G["general-purpose / Plan<br/>→ model από<br/>CLAUDE_CODE_SUBAGENT_MODEL"]
+    end
+    M -->|"10+ αρχεία"| E
+    M -->|"tests · logs"| T
+    M -->|"πριν το «τέλος»"| R
+    M -->|"υπόλοιπα"| G
 ```
 
 Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
@@ -42,24 +43,17 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    S["Εντολή repo-mode:setup"] --> P0["Preflight, μόνο ανάγνωση:<br/>έκδοση, υπάρχουσες ρυθμίσεις, agents"]
-    P0 --> R1["Γύρος 1: κύριο model · advisor ·<br/>βοηθητικοί agents · scope"]
-    R1 --> V{"Επιτρέπεται ο<br/>συνδυασμός model/advisor;"}
-    V -->|"όχι"| R1
-    V -->|"ναι"| R2["Γύρος 2: model κάθε agent ·<br/>model για τους υπόλοιπους subagents"]
-    R2 --> SC["Σάρωση repo, μόνο ανάγνωση:<br/>generated/vendored κώδικας, γλώσσες"]
-    SC --> R3["Γύρος 3: effort · κανόνες ανάθεσης ·<br/>deny rules · LSP plugin"]
-    R3 --> PL["Πλήρες σχέδιο:<br/>before/after κάθε αρχείου"]
-    PL --> Q{"Έγκριση;"}
-    Q -->|"Αλλαγή απαντήσεων"| R1
-    Q -->|"Ακύρωση"| X(["Δεν γράφεται τίποτα"])
-    Q -->|"Εφαρμογή"| W["Γράφονται τα αρχεία"]
-    W --> F1[".claude/settings.local.json<br/>model · advisorModel · effortLevel ·<br/>env · permissions.deny"]
-    W --> F2[".claude/agents/<br/>Explore.md · test-runner.md · audit.md"]
-    W --> F3["CLAUDE.local.md<br/>κανόνες ανάθεσης"]
-    W --> F4[".git/info/exclude<br/>δεν φαίνονται στο git status"]
-    W --> F5[".claude/repo-mode.json<br/>τι άλλαξε, για το /repo-mode:off"]
+    S(["repo-mode:setup"]) --> W0
+    subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
+        direction LR
+        W0["Έλεγχος repo"] --> W1["Γύρος 1<br/>models · scope"] --> W2["Γύρος 2<br/>models των agents"] --> W3["Γύρος 3<br/>effort · κανόνες<br/>deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
+    end
+    W4 --> Q{"Έγκριση;"}
+    Q -->|"Όχι"| X(["Δεν γράφεται τίποτα"])
+    Q -->|"Ναι"| F["settings.local.json<br/>agents/*.md<br/>CLAUDE.local.md<br/>.git/info/exclude<br/>repo-mode.json"]
 ```
+
+Στην έγκριση μπορείς και να αλλάξεις απαντήσεις: ο wizard γυρίζει στον Γύρο 1. Μη επιτρεπτός συνδυασμός model/advisor ξαναρωτιέται στον ίδιο γύρο. Στο scope «Όλη η ομάδα» τα αρχεία είναι `.claude/settings.json` και `CLAUDE.md`, για commit.
 
 ## Εγκατάσταση (μία φορά)
 
