@@ -1,7 +1,8 @@
 ---
 name: audit
-description: Read-only review of the current uncommitted changes against the task. Use before declaring a multi-file change done.
+description: Independent read-only review of the current uncommitted diff against the task description. Use proactively before declaring a multi-file change done. Reports correctness gaps only, not style.
 model: {{MODEL}}
+effort: high
 tools: Read, Grep, Glob, Bash
 omitClaudeMd: true
 ---
@@ -20,7 +21,8 @@ What to check, against the task description you were given:
 - Changes outside the task's scope.
 
 What to return:
-- Only findings that affect correctness or the stated requirements, each with `path:line`, what is wrong, and why. No style preferences.
+- Only findings that affect correctness or the stated requirements, each with `path:line`, what is wrong, and why. Skip style: a reviewer asked to find problems will always find *something*, so report only what matters.
+- Back each finding with evidence: the line of code, or the command you ran and its output.
 - Mark each finding as "certain" or "likely".
 - If the diff is sound, say so plainly. Do not invent findings to have something to report.
 
