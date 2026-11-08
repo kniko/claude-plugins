@@ -23,23 +23,34 @@
 
 ```mermaid
 flowchart TD
-    M["Κύριο session · Sonnet"]
-    M -.->|"σημεία απόφασης"| A[["Advisor<br/>Opus"]]
-    M -->|"10+ αρχεία"| E["Explore<br/>Haiku · low"]
-    M -->|"tests · logs"| T["test-runner<br/>Haiku · low"]
-    M -->|"πριν το «τέλος»"| R["audit<br/>Sonnet · high"]
-    M -->|"υπόλοιπα"| G["general / Plan<br/>Sonnet"]
+    U(["Εσύ"]) --> M["Κύριο session<br/>Sonnet · effort medium"]
+    M -.->|"σημεία απόφασης"| A[["Advisor · Opus<br/>→ πλάνο / διόρθωση"]]
+    subgraph SA ["Subagents · δικό τους context, επιστρέφουν μόνο σύνοψη"]
+        E["Explore<br/>Haiku · low<br/>→ path:line"]
+        T["test-runner<br/>Haiku · low<br/>→ μόνο τα failures"]
+        R["audit<br/>Sonnet · high<br/>→ ευρήματα + αποδείξεις"]
+        G["general-purpose / Plan<br/>Sonnet<br/>→ σύνοψη"]
+    end
+    M -->|"10+ αρχεία"| E
+    M -->|"tests · logs"| T
+    M -->|"πριν το «τέλος»"| R
+    M -->|"υπόλοιπα"| G
 ```
 
-Στο κουτί κάθε agent φαίνεται το model και το effort του. Ο Explore επιστρέφει `path:line`, ο test-runner μόνο τα failures, ο audit ευρήματα με αποδείξεις. Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
+Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
 
 ## Πώς δημιουργούνται οι ρυθμίσεις
 
 ```mermaid
-flowchart LR
-    S(["setup"]) --> W["3 γύροι<br/>ερωτήσεων"] --> P["Σχέδιο<br/>before / after"] --> Q{"Έγκριση;"}
-    Q -->|"Ναι"| F["Γράφονται<br/>τα αρχεία"]
-    Q -->|"Όχι"| X(["Τίποτα"])
+flowchart TD
+    S(["/repo-mode:setup"]) --> WZ
+    subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
+        direction LR
+        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3<br/>effort · κανόνες<br/>deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
+    end
+    WZ --> Q{"Έγκριση;"}
+    Q -->|"Ναι"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
+    Q -->|"Όχι"| X(["Δεν γράφεται τίποτα"])
 ```
 
 Στην έγκριση μπορείς και να αλλάξεις απαντήσεις: ο wizard γυρίζει στον Γύρο 1. Μη επιτρεπτός συνδυασμός model/advisor ξαναρωτιέται στον ίδιο γύρο. Στο scope «Όλη η ομάδα» τα αρχεία είναι `.claude/settings.json` και `CLAUDE.md`, για commit.
