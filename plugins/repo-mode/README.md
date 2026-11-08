@@ -1,134 +1,134 @@
 # repo-mode
 
-**English** · [Ελληνικά](README.el.md)
+**Ελληνικά** · [English](README.en.md)
 
-A Claude Code wizard that decides, **per repository**, which model does which job: the main model and its effort, the advisor, helper subagents on cheaper models, delegation rules, Read deny rules and a code-intelligence plugin. It writes nothing until you approve the full plan, and `/repo-mode:off` undoes exactly what it wrote.
+Οδηγός (wizard) για Claude Code που ρυθμίζει **ανά repository** ποιο model κάνει ποια δουλειά: το κύριο model και το effort του, τον advisor, βοηθητικούς subagents με φθηνότερα models, κανόνες ανάθεσης, Read deny rules και code-intelligence plugin. Δεν γράφει τίποτα πριν εγκρίνεις ολόκληρο το σχέδιο, και το `/repo-mode:off` αναιρεί ακριβώς ό,τι έγραψε.
 
-## Install
+## Εγκατάσταση
 
-In a terminal (once, for every repo):
+Στο terminal (μία φορά, για όλα τα repos):
 
 ```bash
 claude plugin marketplace add kniko/claude-plugins
 claude plugin install repo-mode@kniko-tools
 ```
 
-Then start a new Claude Code session and run `/repo-mode:setup` inside the repo you want to configure.
+Μετά ξεκίνα νέο session Claude Code και τρέξε `/repo-mode:setup` μέσα στο repo που θέλεις να ρυθμίσεις.
 
-| I want to… | Command |
+| Θέλω να… | Εντολή |
 |---|---|
-| update to a newer version | `claude plugin marketplace update kniko-tools`, then `claude plugin update repo-mode@kniko-tools` |
-| check it is installed | `claude plugin list` (should show `repo-mode@kniko-tools`) |
-| remove it | first `/repo-mode:off` in every repo where you ran setup, then `claude plugin uninstall repo-mode@kniko-tools` |
+| πάρω νεότερη έκδοση | `claude plugin marketplace update kniko-tools` και μετά `claude plugin update repo-mode@kniko-tools` |
+| δω αν είναι εγκατεστημένο | `claude plugin list` (πρέπει να δείχνει `repo-mode@kniko-tools`) |
+| το αφαιρέσω | πρώτα `/repo-mode:off` σε κάθε repo όπου το έτρεξες, μετά `claude plugin uninstall repo-mode@kniko-tools` |
 
-If you installed an older copy from a zip or a local folder (`repo-mode@local-tools`), remove it first:
+Αν το είχες εγκαταστήσει παλιότερα από zip ή τοπικό φάκελο (`repo-mode@local-tools`), αφαίρεσέ το πρώτα:
 
 ```bash
 claude plugin uninstall repo-mode@local-tools
 claude plugin marketplace remove local-tools
 ```
 
-The plugin installs at user scope, so its commands are available in every repo. On its own it changes nothing in any repo: only `/repo-mode:setup` makes changes, and only in the repo where you run it.
+Το plugin μπαίνει σε user scope, άρα οι εντολές είναι διαθέσιμες σε κάθε repo. Από μόνο του δεν αλλάζει τίποτα σε κανένα repo: τις αλλαγές τις κάνει μόνο το `/repo-mode:setup`, και μόνο στο repo όπου το τρέχεις.
 
-## Why it's worth it
+## Γιατί αξίζει
 
-Out of the box, Claude Code runs almost everything on the same model, usually the most expensive one. repo-mode splits the work along the lines of Anthropic's docs and guidance:
+Χωρίς ρυθμίσεις, το Claude Code τρέχει σχεδόν όλη τη δουλειά στο ίδιο (συνήθως το ακριβότερο) model. Το repo-mode μοιράζει τη δουλειά με βάση τα docs και τις οδηγίες της Anthropic:
 
-| Without repo-mode | With repo-mode | Benefit |
+| Χωρίς repo-mode | Με repo-mode | Όφελος |
 |---|---|---|
-| The built-in **Explore** subagent runs on **Opus** with a Claude subscription or Console account. | A repo-level `Explore` agent replaces it, on **Haiku** with `effort: low`. | Code search is the most frequent subagent job. Haiku 5.5 costs $0.10 / $0.50 per million tokens (input / output) for prompts up to 100K tokens; `autoCompactWindow: 100000` keeps it under that line. |
-| **general-purpose**, **Plan** and **workflow** agents inherit the main session's model. With an Opus main model, they run on Opus too. | `CLAUDE_CODE_SUBAGENT_MODEL` (e.g. `sonnet`) is set for this repo only. | Other subagents and workflow agents move off the expensive model without touching the main session. A workflow script that names its own model for a stage still keeps it. |
-| A dynamic workflow can launch many agents. | `workflowSizeGuideline` per repo (e.g. `small`). | Claude aims for fewer agents when it writes a workflow. It is guidance, not a hard cap. |
-| One model does both planning and execution. | Sonnet (or Haiku) main model with an **Opus advisor**, or `opusplan`. | The advisor reads the conversation only at decision points. In Anthropic's blog, Sonnet with an Opus advisor scored +2.7 points on SWE-bench Multilingual at 11.9% lower cost per task, and Haiku with an Opus advisor scored 41.2% vs 19.7% solo on BrowseComp (measured on earlier models). |
-| A subagent on a different model from the main session doesn't get the session's effort level. | Each template sets `effort`: `low` for search and tests, `high` for review. | Less thinking spent on mechanical work, more on review. |
-| Full test runs and logs flood the main context. | **test-runner** returns only the failures, verbatim. | The noise stays out; only the summary reaches the main session. |
-| The session that wrote the code also reviews it. | **audit** reviews the diff independently, without the conversation history and without style comments. | A fresh reviewer hasn't seen the reasoning behind the code, so it isn't swayed by it. |
-| Claude guesses when to delegate, and can keep retrying fixes forever. | Short rules in `CLAUDE.local.md`. Optional: stop a fix loop after two rounds without progress. | Delegation only when it pays. Anthropic estimates multi-agent setups use 3–10× more tokens, so delegating makes sense only for 10+ files, 3+ independent pieces of work, or an independent check. |
-| Vendored or generated code shows up in searches. | Read deny rules, only for tracked folders such as `vendor/` and `dist/`. | Fewer useless files in context. |
+| Ο ενσωματωμένος **Explore** τρέχει σε **Opus** όταν έχεις συνδρομή ή Console account. | Ένας agent `Explore` του repo τον αντικαθιστά, σε **Haiku**, με `effort: low`. | Η αναζήτηση στον κώδικα είναι η πιο συχνή δουλειά subagent. Το Haiku 5.5 κοστίζει $0.10 / $0.50 ανά εκατομμύριο tokens (input / output) μέχρι τα 100K tokens prompt. Το `autoCompactWindow: 100000` τον κρατά κάτω από αυτό το όριο. |
+| Οι **general-purpose**, **Plan** και οι agents των **workflows** παίρνουν το model του κύριου session. Με κύριο Opus, τρέχουν κι αυτοί σε Opus. | Το `CLAUDE_CODE_SUBAGENT_MODEL` (π.χ. `sonnet`) μπαίνει μόνο σε αυτό το repo. | Οι υπόλοιποι subagents και οι workflow agents φεύγουν από το ακριβό model, χωρίς να αλλάζει το κύριο session. Ένα workflow script που ορίζει δικό του model για κάποιο στάδιο εξακολουθεί να το κρατάει. |
+| Ένα dynamic workflow μπορεί να ξεκινήσει πολλούς agents. | `workflowSizeGuideline` ανά repo (π.χ. `small`). | Το Claude στοχεύει σε λιγότερους agents όταν γράφει workflow. Είναι οδηγία, όχι αυστηρό όριο. |
+| Ένα model κάνει και τον σχεδιασμό και την εκτέλεση. | Κύριο Sonnet (ή Haiku) με **Opus advisor**, ή `opusplan`. | Ο advisor διαβάζει τη συζήτηση μόνο στα σημεία απόφασης. Στο blog της Anthropic, Sonnet με Opus advisor έδωσε +2.7 μονάδες στο SWE-bench Multilingual με 11.9% χαμηλότερο κόστος ανά task, και Haiku με Opus advisor 41.2% αντί για 19.7% στο BrowseComp (μετρήσεις με παλαιότερα models). |
+| Ένας subagent σε άλλο model από το κύριο δεν παίρνει το effort του session. | Κάθε template ορίζει `effort`: `low` για αναζήτηση και tests, `high` για review. | Λιγότερο «σκέψιμο» στις μηχανικές δουλειές, περισσότερο στο review. |
+| Τα πλήρη tests και τα logs γεμίζουν το κύριο context. | Ο **test-runner** επιστρέφει μόνο τα failures, αυτολεξεί. | Ο θόρυβος μένει έξω. Στο κύριο session φτάνει μόνο η σύνοψη. |
+| Το review το κάνει το ίδιο session που έγραψε τον κώδικα. | Ο **audit** κάνει ανεξάρτητο review του diff, χωρίς το ιστορικό της συζήτησης και χωρίς σχόλια για στυλ. | Ένας «φρέσκος» reviewer δεν έχει δει το σκεπτικό του κώδικα, άρα δεν επηρεάζεται από αυτό. |
+| Το Claude μαντεύει πότε να αναθέσει, και μπορεί να επαναλαμβάνει διορθώσεις χωρίς τέλος. | Σύντομοι κανόνες στο `CLAUDE.local.md`. Προαιρετικά: σταμάτα έναν κύκλο διορθώσεων μετά από δύο γύρους χωρίς πρόοδο. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
+| Vendored ή generated κώδικας μπαίνει στις αναζητήσεις. | Read deny rules μόνο για tracked φακέλους, όπως `vendor/` και `dist/`. | Λιγότερα άχρηστα αρχεία στο context. |
 
-To see where tokens go, `/usage` shows consumption per subagent.
+Για να δεις πού πάνε τα tokens, το `/usage` δείχνει την κατανάλωση ανά subagent.
 
-## How the work is split
+## Πώς μοιράζεται η δουλειά
 
 ```mermaid
 flowchart TD
-    U(["You"]) --> M["Main session<br/>Sonnet · effort medium"]
-    M -.->|"decision points"| A[["Advisor · Opus<br/>→ plan / correction"]]
-    subgraph SA ["Subagents · own context, return only a summary"]
+    U(["Εσύ"]) --> M["Κύριο session<br/>Sonnet · effort medium"]
+    M -.->|"σημεία απόφασης"| A[["Advisor · Opus<br/>→ πλάνο / διόρθωση"]]
+    subgraph SA ["Subagents · δικό τους context, επιστρέφουν μόνο σύνοψη"]
         E["Explore<br/>Haiku · low<br/>→ path:line"]
-        T["test-runner<br/>Haiku · low<br/>→ failures only"]
-        R["audit<br/>Sonnet · high<br/>→ findings + evidence"]
-        G["general-purpose / Plan<br/>Sonnet<br/>→ summary"]
+        T["test-runner<br/>Haiku · low<br/>→ μόνο τα failures"]
+        R["audit<br/>Sonnet · high<br/>→ ευρήματα + αποδείξεις"]
+        G["general-purpose / Plan<br/>Sonnet<br/>→ σύνοψη"]
     end
-    M -->|"10+ files"| E
+    M -->|"10+ αρχεία"| E
     M -->|"tests · logs"| T
-    M -->|"before «done»"| R
-    M -->|"everything else"| G
+    M -->|"πριν το «τέλος»"| R
+    M -->|"υπόλοιπα"| G
 ```
 
-Each subagent starts with its own clean context, without CLAUDE.md (`omitClaudeMd: true`) and without the Agent tool, so it can't start subagents of its own. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
+Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
 
-## How the setup is created
+## Πώς δημιουργούνται οι ρυθμίσεις
 
 ```mermaid
 flowchart TD
     S(["/repo-mode:setup"]) --> WZ
-    subgraph WZ ["Wizard · questions and reads only"]
+    subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
         direction LR
-        W0["Check repo<br/>version · settings"] --> W1["Round 1<br/>model · advisor<br/>agents · scope"] --> W2["Round 2<br/>model per agent<br/>+ the rest"] --> W3["Rounds 3–4<br/>effort · workflows<br/>rules · deny · LSP"] --> W4["Plan<br/>before / after"]
+        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3–4<br/>effort · workflows<br/>κανόνες · deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
     end
-    WZ --> Q{"Approve?"}
-    Q -->|"Yes"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
-    Q -->|"No"| X(["Nothing is written"])
+    WZ --> Q{"Έγκριση;"}
+    Q -->|"Ναι"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
+    Q -->|"Όχι"| X(["Δεν γράφεται τίποτα"])
 ```
 
-At the approval step you can also change your answers: the wizard goes back to Round 1. A model/advisor pair that isn't allowed is asked again in the same round. With the "Whole team" scope the files are `.claude/settings.json` and `CLAUDE.md`, for committing.
+Στην έγκριση μπορείς και να αλλάξεις απαντήσεις: ο wizard γυρίζει στον Γύρο 1. Μη επιτρεπτός συνδυασμός model/advisor ξαναρωτιέται στον ίδιο γύρο. Στο scope «Όλη η ομάδα» τα αρχεία είναι `.claude/settings.json` και `CLAUDE.md`, για commit.
 
-## Commands
+## Εντολές
 
-| Command | What it does |
+| Εντολή | Τι κάνει |
 |---|---|
-| `/repo-mode:setup` | Asks for main model, advisor, subagents, scope, subagent models, the model for other subagents and workflows, effort, workflow size, rules, deny rules and LSP. Shows every change (before/after) and applies only after you approve. |
-| `/repo-mode:status` | Read-only: what applies in this repo right now and which file it comes from. Also flags costly setups, e.g. subagents running on Opus. |
-| `/repo-mode:off` | Undoes exactly what setup wrote (from `.claude/repo-mode.json`), restores the previous values, and asks for approval before deleting anything. |
+| `/repo-mode:setup` | Ρωτάει main model, advisor, subagents, scope, models των subagents, model για τους υπόλοιπους subagents και τα workflows, effort, μέγεθος workflows, κανόνες, deny rules και LSP. Δείχνει όλες τις αλλαγές (before/after) και εφαρμόζει μόνο μετά την έγκρισή σου. |
+| `/repo-mode:status` | Μόνο ανάγνωση: τι ισχύει τώρα σε αυτό το repo και από ποιο αρχείο προέρχεται. Επισημαίνει και ακριβές ρυθμίσεις, π.χ. subagents που τρέχουν σε Opus. |
+| `/repo-mode:off` | Αναιρεί ακριβώς ό,τι έγραψε το setup (από το `.claude/repo-mode.json`), επαναφέρει τις προηγούμενες τιμές, και ζητάει έγκριση πριν σβήσει οτιδήποτε. |
 
-After `setup` or `off`, start a new session in the repo.
+Μετά από `setup` ή `off`, ξεκίνα νέο session στο repo.
 
-## Recommended choices
+## Προτεινόμενες επιλογές
 
-| Question | Recommendation | Alternatives |
+| Ερώτηση | Πρόταση | Εναλλακτικές |
 |---|---|---|
-| Main model | Sonnet | Opus · `opusplan` (Opus in plan mode, Sonnet for execution) · Haiku (cheapest, good with an Opus advisor) |
-| Advisor | Opus | Fable · Sonnet (not with an Opus main model) · none |
-| Explore / test-runner | Haiku | Sonnet · same as main |
-| audit | Sonnet | Opus · same as main |
-| Other subagents and workflow agents | Sonnet if the main model is Opus, `opusplan` or Fable; otherwise same as main | Haiku |
-| Effort | model default (`medium`) | `high` / `xhigh` for hard work, `low` for routine work |
-| Workflow size | default (`medium`, or `small` on Pro) | `small` to save · `large` / `unrestricted` for big refactors |
-| Delegation rules | Yes | Yes + stop fix loops · No |
+| Κύριο model | Sonnet | Opus · `opusplan` (Opus στο plan mode, Sonnet στην εκτέλεση) · Haiku (το φθηνότερο, καλό με Opus advisor) |
+| Advisor | Opus | Fable · Sonnet (όχι με κύριο Opus) · κανένας |
+| Explore / test-runner | Haiku | Sonnet · ίδιο με το κύριο |
+| audit | Sonnet | Opus · ίδιο με το κύριο |
+| Υπόλοιποι subagents και workflow agents | Sonnet αν το κύριο είναι Opus, `opusplan` ή Fable. Αλλιώς ίδιο με το κύριο. | Haiku |
+| Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
+| Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
+| Κανόνες ανάθεσης | Ναι | Ναι + σταμάτημα κύκλων διορθώσεων · Όχι |
 
-## What it writes in each repo
+## Τι γράφει σε κάθε repo
 
-**"Only me" scope (default)**: nothing is committed.
+**Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`
-- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (whichever you pick)
-- `CLAUDE.local.md`: a block of delegation rules between `<!-- repo-mode:start/end -->`
-- `.claude/repo-mode.json`: what changed, so undo is exact
-- `.git/info/exclude`: all of the above, so they don't show in `git status` (the repo's `.gitignore` is untouched)
+- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (όσα επιλέξεις)
+- `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
+- `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo
+- `.git/info/exclude`: όλα τα παραπάνω, ώστε να μη φαίνονται στο `git status` (το `.gitignore` του repo δεν αλλάζει)
 
-**"Whole team" scope**: the same, but in `.claude/settings.json` and `CLAUDE.md`, for committing.
+**Scope «Όλη η ομάδα»**: τα ίδια, αλλά σε `.claude/settings.json` και `CLAUDE.md`, για commit.
 
-## Notes
+## Σημειώσεις
 
-- **Ultracode:** repo-mode never turns it on. With ultracode, Claude writes a workflow for every substantive task at `xhigh` effort, and the docs say each request uses more tokens and takes longer. Turn it on only for a big task with `/effort ultracode`, and off again with `/effort ultracode off`. Workflow agents without a model of their own then use the one repo-mode set.
-- The advisor is experimental and works only through the Anthropic API, not Bedrock, Vertex or Foundry. It doesn't work if `DISABLE_TELEMETRY` is set. Each call re-reads the whole conversation, uncached, at the advisor model's rates. It pays off on long multi-step work, not on short tasks.
-- Don't change the advisor from the `/advisor` picker: it saves to your global settings and applies to every repo.
-- `audit` does similar work to the built-in `/code-review`. `audit` runs automatically before "done"; `/code-review` runs whenever you call it.
-- The `audit` agent doesn't run in a worktree: a worktree starts from the default branch without your uncommitted changes, so it wouldn't see the diff.
-- `audit` and `test-runner` have Bash. That they don't change files is stated in their instructions, not enforced by Claude Code. `Explore` is technically read-only (Read, Grep, Glob only).
-- Minimum Claude Code versions: `autoCompactWindow` v2.1.296+, Haiku 5.5 v2.1.293+, Sonnet 5.5 v2.1.284+, Opus 5.5 v2.1.280+, `omitClaudeMd` v2.1.271+. Older versions simply ignore fields they don't know.
+- **Ultracode:** το repo-mode δεν το ενεργοποιεί ποτέ. Με το ultracode, το Claude γράφει workflow για κάθε σημαντική δουλειά, με effort `xhigh`, και τα docs λένε ότι κάθε αίτημα καίει περισσότερα tokens και αργεί. Άνοιξέ το μόνο για μια μεγάλη δουλειά, με `/effort ultracode`, και κλείσ' το με `/effort ultracode off`. Οι workflow agents που δεν έχουν δικό τους model παίρνουν τότε αυτό που όρισε το repo-mode.
+- Ο advisor είναι experimental και δουλεύει μόνο μέσω Anthropic API, όχι Bedrock, Vertex ή Foundry. Δεν λειτουργεί αν έχει οριστεί `DISABLE_TELEMETRY`. Κάθε κλήση του ξαναδιαβάζει όλη τη συζήτηση, χωρίς cache, με τις τιμές του advisor model. Αξίζει σε μεγάλες δουλειές πολλών βημάτων, όχι σε μικρές.
+- Μην αλλάζεις advisor από τον picker του `/advisor`: σώζει στις global ρυθμίσεις και ισχύει σε όλα τα repos.
+- Ο `audit` κάνει παρόμοια δουλειά με το ενσωματωμένο `/code-review`. Ο `audit` τρέχει αυτόματα πριν το «τελείωσα», ενώ το `/code-review` το τρέχεις όποτε θες.
+- Ο agent `audit` δεν τρέχει σε worktree: ένα worktree ξεκινά από το default branch, χωρίς τις uncommitted αλλαγές σου, άρα δεν θα έβλεπε το diff.
+- Οι `audit` και `test-runner` έχουν Bash. Το ότι δεν αλλάζουν αρχεία το λένε οι οδηγίες τους, δεν το επιβάλλει το Claude Code. Ο `Explore` είναι τεχνικά read-only (μόνο Read, Grep, Glob).
+- Ελάχιστες εκδόσεις Claude Code: `autoCompactWindow` v2.1.296+, Haiku 5.5 v2.1.293+, Sonnet 5.5 v2.1.284+, Opus 5.5 v2.1.280+, `omitClaudeMd` v2.1.271+. Οι παλαιότερες εκδόσεις απλώς αγνοούν τα πεδία που δεν ξέρουν.
 
-## Sources
+## Πηγές
 
 - [Create custom subagents](https://code.claude.com/docs/en/sub-agents)
 - [Advisor](https://code.claude.com/docs/en/advisor)
@@ -142,4 +142,4 @@ After `setup` or `off`, start a new session in the repo.
 - [When to use multi-agent systems](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them)
 - [Dynamic workflows](https://code.claude.com/docs/en/workflows)
 
-Facts checked on 2026-11-08 (workflows: 2026-11-09).
+Στοιχεία ελεγμένα στις 2026-11-08 (workflows: 2026-11-09).
