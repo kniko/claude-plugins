@@ -1,6 +1,6 @@
 # repo-mode reference
 
-Facts below come from the Claude Code docs (code.claude.com/docs) and the Claude pricing page, checked 2026-11-08. If something here conflicts with what you observe in the user's Claude Code, trust the observation and tell the user.
+Facts below come from the Claude Code docs (code.claude.com/docs) and the Claude pricing page, checked 2026-11-08 (workflows: 2026-11-09). If something here conflicts with what you observe in the user's Claude Code, trust the observation and tell the user.
 
 ## Model aliases
 
@@ -20,6 +20,8 @@ Fable needs Fable access, and on some plans a one-time consent to bill Fable usa
 | Opus 5.5 | v2.1.280+ |
 | `omitClaudeMd` agent field | v2.1.271+ |
 | Fable 5.1 | v2.1.257+ |
+| `ultracode` setting | v2.1.284+ |
+| `workflowSizeGuideline` default `small` on Pro | v2.1.271+ |
 
 Unknown agent frontmatter fields are ignored silently, so an older Claude Code just skips them.
 
@@ -67,6 +69,15 @@ Other advisor facts:
 - **Haiku 5.5 price tier:** $0.10 / $0.50 per MTok (input / output) for prompts up to 100,000 tokens, $0.50 / $2.50 above that. `autoCompactWindow: 100000` in a Haiku agent makes it compact before crossing that line.
 - `/usage` breaks usage down per subagent, skill, plugin and MCP server.
 
+## Dynamic workflows
+
+- A workflow is a JavaScript script Claude writes to orchestrate many subagents (`agent()`, `pipeline()`, `parallel()`); it runs in the background. Typing `ultracode` in a prompt asks for one; `/effort ultracode` (or the `ultracode` setting) makes Claude write one for every substantive task and sets effort to `xhigh`.
+- Cost: the docs say ultracode makes "each request use more tokens and takes longer", and a workflow run "can use meaningfully more tokens than working through the same task in conversation". repo-mode never writes `ultracode`.
+- Workflow agents pick their model in the subagent order: a model the script names for a stage, else `CLAUDE_CODE_SUBAGENT_MODEL`, else the session model. So the "Other agents" answer also covers workflow agents the script leaves unassigned.
+- `workflowSizeGuideline`: `unrestricted` | `small` | `medium` | `large`; valid in any settings file. Default `medium`, or `small` on Pro (v2.1.271+). It sets the agent count Claude aims for — advice, not a cap.
+- Limits: 16 concurrent agents by default (`CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS`, 1–256), 1,000 agents per run; a "Large workflow" warning appears above 25 agents or 1.5M projected tokens.
+- Off switches: `"disableWorkflows": true` or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
+
 ## Delegation guidance (Anthropic blog and best-practices)
 
 - Delegate when gathering context means reading 10+ files, when there are 3+ independent pieces of work, or when verification should not be influenced by the conversation.
@@ -85,7 +96,7 @@ Other advisor facts:
 
 Precedence (highest first): managed > command line > `.claude/settings.local.json` > `.claude/settings.json` > `~/.claude/settings.json`. Lists such as `permissions.deny` merge across files.
 
-`model`, `effortLevel` and `env` are read at session start; a change needs a new session. `advisorModel`, `model`, `effortLevel`, `env` and `permissions.deny` are valid in all three files. In the shared project file, most `env` values apply only after each teammate trusts the folder.
+`model`, `effortLevel`, `workflowSizeGuideline` and `env` are read at session start; a change needs a new session. `advisorModel`, `model`, `effortLevel`, `workflowSizeGuideline`, `env` and `permissions.deny` are valid in all three files. In the shared project file, most `env` values apply only after each teammate trusts the folder.
 
 Settings files are strict JSON: no comments, no trailing commas.
 
@@ -126,8 +137,8 @@ Anthropic's official marketplace (`claude-plugins-official`) has code intelligen
   "scope": "personal",
   "appliedAt": "2026-11-08T16:30:00+02:00",
   "settingsFile": ".claude/settings.local.json",
-  "settings": { "model": "sonnet", "advisorModel": "opus", "effortLevel": null, "env.CLAUDE_CODE_SUBAGENT_MODEL": null },
-  "previousSettings": { "model": null, "advisorModel": null, "effortLevel": null, "env.CLAUDE_CODE_SUBAGENT_MODEL": null },
+  "settings": { "model": "sonnet", "advisorModel": "opus", "effortLevel": null, "workflowSizeGuideline": null, "env.CLAUDE_CODE_SUBAGENT_MODEL": null },
+  "previousSettings": { "model": null, "advisorModel": null, "effortLevel": null, "workflowSizeGuideline": null, "env.CLAUDE_CODE_SUBAGENT_MODEL": null },
   "denyRulesAdded": ["Read(./**/vendor/**/*)"],
   "agentsCreated": [".claude/agents/Explore.md", ".claude/agents/test-runner.md", ".claude/agents/audit.md"],
   "rulesFile": "CLAUDE.local.md",
@@ -139,4 +150,4 @@ Anthropic's official marketplace (`claude-plugins-official`) has code intelligen
 }
 ```
 
-In `settings`, `null` means setup did not set that key. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat the missing keys as `null`.
+In `settings`, `null` means setup did not set that key. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat any missing key as `null`.
