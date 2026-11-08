@@ -35,12 +35,13 @@ claude plugin marketplace remove local-tools
 | Χωρίς repo-mode | Με repo-mode | Όφελος |
 |---|---|---|
 | Ο ενσωματωμένος **Explore** τρέχει σε **Opus** όταν έχεις συνδρομή ή Console account. | Ένας agent `Explore` του repo τον αντικαθιστά, σε **Haiku**, με `effort: low`. | Η αναζήτηση στον κώδικα είναι η πιο συχνή δουλειά subagent. Το Haiku 5.5 κοστίζει $0.10 / $0.50 ανά εκατομμύριο tokens (input / output) μέχρι τα 100K tokens prompt. Το `autoCompactWindow: 100000` τον κρατά κάτω από αυτό το όριο. |
-| Οι **general-purpose** και **Plan** παίρνουν το model του κύριου session. Με κύριο Opus, τρέχουν κι αυτοί σε Opus. | Το `CLAUDE_CODE_SUBAGENT_MODEL` (π.χ. `sonnet`) μπαίνει μόνο σε αυτό το repo. | Οι υπόλοιποι subagents φεύγουν από το ακριβό model, χωρίς να αλλάζει το κύριο session. |
+| Οι **general-purpose**, **Plan** και οι agents των **workflows** παίρνουν το model του κύριου session. Με κύριο Opus, τρέχουν κι αυτοί σε Opus. | Το `CLAUDE_CODE_SUBAGENT_MODEL` (π.χ. `sonnet`) μπαίνει μόνο σε αυτό το repo. | Οι υπόλοιποι subagents και οι workflow agents φεύγουν από το ακριβό model, χωρίς να αλλάζει το κύριο session. Ένα workflow script που ορίζει δικό του model για κάποιο στάδιο εξακολουθεί να το κρατάει. |
+| Ένα dynamic workflow μπορεί να ξεκινήσει πολλούς agents. | `workflowSizeGuideline` ανά repo (π.χ. `small`). | Το Claude στοχεύει σε λιγότερους agents όταν γράφει workflow. Είναι οδηγία, όχι αυστηρό όριο. |
 | Ένα model κάνει και τον σχεδιασμό και την εκτέλεση. | Κύριο Sonnet (ή Haiku) με **Opus advisor**, ή `opusplan`. | Ο advisor διαβάζει τη συζήτηση μόνο στα σημεία απόφασης. Στο blog της Anthropic, Sonnet με Opus advisor έδωσε +2.7 μονάδες στο SWE-bench Multilingual με 11.9% χαμηλότερο κόστος ανά task, και Haiku με Opus advisor 41.2% αντί για 19.7% στο BrowseComp (μετρήσεις με παλαιότερα models). |
 | Ένας subagent σε άλλο model από το κύριο δεν παίρνει το effort του session. | Κάθε template ορίζει `effort`: `low` για αναζήτηση και tests, `high` για review. | Λιγότερο «σκέψιμο» στις μηχανικές δουλειές, περισσότερο στο review. |
 | Τα πλήρη tests και τα logs γεμίζουν το κύριο context. | Ο **test-runner** επιστρέφει μόνο τα failures, αυτολεξεί. | Ο θόρυβος μένει έξω. Στο κύριο session φτάνει μόνο η σύνοψη. |
 | Το review το κάνει το ίδιο session που έγραψε τον κώδικα. | Ο **audit** κάνει ανεξάρτητο review του diff, χωρίς το ιστορικό της συζήτησης και χωρίς σχόλια για στυλ. | Ένας «φρέσκος» reviewer δεν έχει δει το σκεπτικό του κώδικα, άρα δεν επηρεάζεται από αυτό. |
-| Το Claude μαντεύει πότε να αναθέσει. | Τέσσερις σύντομοι κανόνες στο `CLAUDE.local.md`. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
+| Το Claude μαντεύει πότε να αναθέσει, και μπορεί να επαναλαμβάνει διορθώσεις χωρίς τέλος. | Σύντομοι κανόνες στο `CLAUDE.local.md`. Προαιρετικά: σταμάτα έναν κύκλο διορθώσεων μετά από δύο γύρους χωρίς πρόοδο. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
 | Vendored ή generated κώδικας μπαίνει στις αναζητήσεις. | Read deny rules μόνο για tracked φακέλους, όπως `vendor/` και `dist/`. | Λιγότερα άχρηστα αρχεία στο context. |
 
 Για να δεις πού πάνε τα tokens, το `/usage` δείχνει την κατανάλωση ανά subagent.
@@ -72,7 +73,7 @@ flowchart TD
     S(["/repo-mode:setup"]) --> WZ
     subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
         direction LR
-        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3<br/>effort · κανόνες<br/>deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
+        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3–4<br/>effort · workflows<br/>κανόνες · deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
     end
     WZ --> Q{"Έγκριση;"}
     Q -->|"Ναι"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
@@ -85,7 +86,7 @@ flowchart TD
 
 | Εντολή | Τι κάνει |
 |---|---|
-| `/repo-mode:setup` | Ρωτάει main model, advisor, subagents, scope, models των subagents, model για τους υπόλοιπους subagents, effort, κανόνες, deny rules και LSP. Δείχνει όλες τις αλλαγές (before/after) και εφαρμόζει μόνο μετά την έγκρισή σου. |
+| `/repo-mode:setup` | Ρωτάει main model, advisor, subagents, scope, models των subagents, model για τους υπόλοιπους subagents και τα workflows, effort, μέγεθος workflows, κανόνες, deny rules και LSP. Δείχνει όλες τις αλλαγές (before/after) και εφαρμόζει μόνο μετά την έγκρισή σου. |
 | `/repo-mode:status` | Μόνο ανάγνωση: τι ισχύει τώρα σε αυτό το repo και από ποιο αρχείο προέρχεται. Επισημαίνει και ακριβές ρυθμίσεις, π.χ. subagents που τρέχουν σε Opus. |
 | `/repo-mode:off` | Αναιρεί ακριβώς ό,τι έγραψε το setup (από το `.claude/repo-mode.json`), επαναφέρει τις προηγούμενες τιμές, και ζητάει έγκριση πριν σβήσει οτιδήποτε. |
 
@@ -99,13 +100,15 @@ flowchart TD
 | Advisor | Opus | Fable · Sonnet (όχι με κύριο Opus) · κανένας |
 | Explore / test-runner | Haiku | Sonnet · ίδιο με το κύριο |
 | audit | Sonnet | Opus · ίδιο με το κύριο |
-| Υπόλοιποι subagents | Sonnet αν το κύριο είναι Opus, `opusplan` ή Fable. Αλλιώς ίδιο με το κύριο. | Haiku |
+| Υπόλοιποι subagents και workflow agents | Sonnet αν το κύριο είναι Opus, `opusplan` ή Fable. Αλλιώς ίδιο με το κύριο. | Haiku |
 | Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
+| Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
+| Κανόνες ανάθεσης | Ναι | Ναι + σταμάτημα κύκλων διορθώσεων · Όχι |
 
 ## Τι γράφει σε κάθε repo
 
 **Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
-- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`
+- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`
 - `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (όσα επιλέξεις)
 - `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo
@@ -115,6 +118,7 @@ flowchart TD
 
 ## Σημειώσεις
 
+- **Ultracode:** το repo-mode δεν το ενεργοποιεί ποτέ. Με το ultracode, το Claude γράφει workflow για κάθε σημαντική δουλειά, με effort `xhigh`, και τα docs λένε ότι κάθε αίτημα καίει περισσότερα tokens και αργεί. Άνοιξέ το μόνο για μια μεγάλη δουλειά, με `/effort ultracode`, και κλείσ' το με `/effort ultracode off`. Οι workflow agents που δεν έχουν δικό τους model παίρνουν τότε αυτό που όρισε το repo-mode.
 - Ο advisor είναι experimental και δουλεύει μόνο μέσω Anthropic API, όχι Bedrock, Vertex ή Foundry. Δεν λειτουργεί αν έχει οριστεί `DISABLE_TELEMETRY`. Κάθε κλήση του ξαναδιαβάζει όλη τη συζήτηση, χωρίς cache, με τις τιμές του advisor model. Αξίζει σε μεγάλες δουλειές πολλών βημάτων, όχι σε μικρές.
 - Μην αλλάζεις advisor από τον picker του `/advisor`: σώζει στις global ρυθμίσεις και ισχύει σε όλα τα repos.
 - Ο `audit` κάνει παρόμοια δουλειά με το ενσωματωμένο `/code-review`. Ο `audit` τρέχει αυτόματα πριν το «τελείωσα», ενώ το `/code-review` το τρέχεις όποτε θες.
@@ -134,5 +138,6 @@ flowchart TD
 - [Steering Claude Code](https://claude.com/resources/articles/steering-claude-code-skills-hooks-rules-subagents-and-more)
 - [The advisor strategy](https://claude.com/blog/the-advisor-strategy)
 - [When to use multi-agent systems](https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them)
+- [Dynamic workflows](https://code.claude.com/docs/en/workflows)
 
-Στοιχεία ελεγμένα στις 2026-11-08.
+Στοιχεία ελεγμένα στις 2026-11-08 (workflows: 2026-11-09).

@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Interactive wizard that configures this repository's main model, effort level, advisor model, helper subagents (Explore, test-runner, audit), the default model for other subagents, delegation rules, Read deny rules and code-intelligence plugin. Writes nothing until the user approves the full plan.
+description: Interactive wizard that configures this repository's main model, effort level, advisor model, helper subagents (Explore, test-runner, audit), the default model for other subagents and workflow agents, workflow size, delegation rules, Read deny rules and code-intelligence plugin. Writes nothing until the user approves the full plan.
 disable-model-invocation: true
 ---
 
@@ -21,7 +21,7 @@ Ground rules for the whole run:
 2. Run `claude --version` if possible and note it. If it is below v2.1.296, list what needs a newer version (table "Version floors" in reference.md): `autoCompactWindow` v2.1.296, Haiku 5.5 v2.1.293, Sonnet 5.5 v2.1.284, Opus 5.5 v2.1.280, `omitClaudeMd` v2.1.271. Older versions silently ignore unknown agent fields.
 3. Read, if they exist: `.claude/repo-mode.json`, `.claude/settings.local.json`, `.claude/settings.json`, `~/.claude/settings.json` (read only), `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, `AGENTS.md`, `.git/info/exclude`, and the list of files in `.claude/agents/`.
 4. If `.claude/repo-mode.json` exists, repo-mode is already set up here. Show what it recorded and ask: **change the settings** (continue; the plan in step 5 will show old → new) or **cancel**.
-5. If `~/.claude/settings.json` sets `model`, `advisorModel`, `effortLevel` or `env.CLAUDE_CODE_SUBAGENT_MODEL`, tell the user: those are global and apply in every repo where repo-mode is off; the repo file will override them here. Do not change the global file.
+5. If `~/.claude/settings.json` sets `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `ultracode` or `env.CLAUDE_CODE_SUBAGENT_MODEL`, tell the user: those are global and apply in every repo where repo-mode is off; the repo file will override them here. Do not change the global file.
 6. If any existing `.claude/agents/` file is named `Explore.md`, `test-runner.md`, or `audit.md` and was not created by repo-mode (no `<!-- managed by repo-mode -->` line), note it — the user must decide later whether to replace it or skip that agent.
 
 ## Step 1 — Round 1: models and scope
@@ -41,7 +41,7 @@ Then validate the main/advisor pair against the table in reference.md:
 - Fable anywhere → remind them it needs Fable access and possibly the one-time `/model fable` consent.
 - Any advisor → remind them once: experimental, Anthropic API only (not Bedrock/Vertex/Foundry), off if `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_ADVISOR_TOOL=1` is set, each consult re-reads the whole conversation uncached at advisor rates — worth it for long multi-step work, not for short tasks.
 
-For team scope, also warn: `model`, `advisorModel`, `effortLevel` and `env` in `.claude/settings.json` apply to every teammate, and the advisor fails for anyone not on the Anthropic API.
+For team scope, also warn: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline` and `env` in `.claude/settings.json` apply to every teammate, and the advisor fails for anyone not on the Anthropic API.
 
 If Advisor = None but `~/.claude/settings.json` sets `advisorModel`, explain that a repo file cannot switch off a global advisor (the only documented off switches are removing the key, `/advisor off`, or `CLAUDE_CODE_DISABLE_ADVISOR_TOOL=1`), so that global advisor will still apply here. Suggest they handle it themselves if they want per-repo control; don't do it for them.
 
@@ -52,7 +52,7 @@ Ask about the helper agents the user selected, plus the default for every other 
 - **Explore model** (header "Explore"): `Haiku (Recommended)` · `Sonnet` · `Inherit` (same as main).
 - **test-runner model** (header "Tests"): `Haiku (Recommended)` · `Sonnet` · `Inherit`.
 - **audit model** (header "Audit"): `Sonnet (Recommended)` — judgment task, Haiku is the weakest choice · `Opus` · `Inherit`.
-- **Other subagents** (header "Other agents") — the model for general-purpose, Plan and any subagent without its own `model`, set through `env.CLAUDE_CODE_SUBAGENT_MODEL`: if the main model is Opus, opusplan or Fable: `Sonnet (Recommended)` — otherwise those subagents also run on the expensive main model · `Haiku` · `Same as main (no change)`. If the main model is Sonnet or Haiku: `Same as main (Recommended)` · `Haiku` · `Sonnet`.
+- **Other subagents** (header "Other agents") — the model for general-purpose, Plan, workflow agents and any subagent without its own `model` (a workflow script that names a model for a stage still wins), set through `env.CLAUDE_CODE_SUBAGENT_MODEL`: if the main model is Opus, opusplan or Fable: `Sonnet (Recommended)` — otherwise those subagents also run on the expensive main model · `Haiku` · `Same as main (no change)`. If the main model is Sonnet or Haiku: `Same as main (Recommended)` · `Haiku` · `Sonnet`.
 
 Write the model values as the aliases `haiku` / `sonnet` / `opus` / `inherit`. If Explore = Haiku, the rendered Explore file gets `autoCompactWindow: 100000` (see reference.md, Haiku price tier); otherwise drop that line.
 
@@ -64,25 +64,29 @@ If a selected agent's file already exists and isn't managed by repo-mode, ask wh
 2. **Languages.** Count tracked files by extension and name the top languages.
 3. Check existing `permissions.deny` entries in the target settings file so you don't propose duplicates.
 
-## Step 4 — Round 3: effort, rules, deny rules and code intelligence
+## Step 4 — Round 3: effort, workflows, rules and deny rules; Round 4: code intelligence
 
-Ask together (skip a question if there's nothing to ask):
+Round 3 — ask together (skip a question if there's nothing to ask):
 
 - **Main effort** (header "Effort"): `Model default (Recommended)` — writes nothing; the 5.5 models default to `medium` · `high` — for work where overlooked edge cases are costly · `xhigh` · `low` — cheapest, for routine edits. Written as `effortLevel`. `max` is not a valid settings value; mention it can only be chosen per session with `/effort`.
-- **Delegation rules** (header "Rules", only if subagents were selected): `Yes (Recommended)` — add up to four short lines telling the main session when to delegate and what to ask back · `No`.
+- **Workflow size** (header "Workflows") — how many agents Claude aims for when it writes a dynamic workflow (advice, not a hard cap): `Default (Recommended)` — writes nothing; `medium`, or `small` on Pro (v2.1.271+) · `small` — fewest agents, lowest cost · `large` — big refactors and audits · `unrestricted`. Written as `workflowSizeGuideline`. Mention that ultracode (Claude writes a workflow for every substantive task, at `xhigh` effort) is deliberately not offered: it uses more tokens per request; turn it on per session with `/effort ultracode` when a task is big enough.
+- **Delegation rules** (header "Rules", only if subagents were selected): `Yes (Recommended)` — short lines telling the main session when to delegate and what to ask back · `Yes + stop fix loops` — also stop a fix-and-retest loop after two rounds in a row without progress, and report instead · `No`.
 - **Read deny rules** (header "Deny reads", multiSelect): one option per candidate found in step 3 (up to 4, biggest first), each with its file count, e.g. `vendor/ (1,240 files)`. If there are more than 4, mention the rest in the question text and let the user name them via "Other". If none were found, skip this question and say so.
-- **Code intelligence** (header "LSP"): if a main language was found, `Install <language> code-intelligence plugin for this repo (Recommended)` · `Skip`. Only TypeScript's plugin name is verified (`typescript-lsp@claude-plugins-official`); for other languages, the plan will tell the user to install it from `/plugin` → Discover with "Install for you, in this repo only". Mention the language server binary must be installed on the machine.
+Round 4 — only if a main language was found:
+
+- **Code intelligence** (header "LSP"): `Install <language> code-intelligence plugin for this repo (Recommended)` · `Skip`. Only TypeScript's plugin name is verified (`typescript-lsp@claude-plugins-official`); for other languages, the plan will tell the user to install it from `/plugin` → Discover with "Install for you, in this repo only". Mention the language server binary must be installed on the machine.
 
 ## Step 5 — Show the full plan and wait for approval
 
 Build the complete plan without writing anything, and show it to the user:
 
-1. **Settings file** (`.claude/settings.local.json` for personal, `.claude/settings.json` for team): show the full JSON **before** and **after**. Merge, never drop existing keys (keep `permissions.allow`, `enabledPlugins`, hooks, other `env` entries, everything). Set `model`; set `advisorModel` (or, if Advisor = None, remove `advisorModel` only if it exists in this file and say so); set `effortLevel` if chosen; set `env.CLAUDE_CODE_SUBAGENT_MODEL` if chosen (never set `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` — it would override the helper agents' own models); append chosen deny rules to `permissions.deny` without duplicates. Valid strict JSON only.
+1. **Settings file** (`.claude/settings.local.json` for personal, `.claude/settings.json` for team): show the full JSON **before** and **after**. Merge, never drop existing keys (keep `permissions.allow`, `enabledPlugins`, hooks, other `env` entries, everything). Set `model`; set `advisorModel` (or, if Advisor = None, remove `advisorModel` only if it exists in this file and say so); set `effortLevel` if chosen; set `env.CLAUDE_CODE_SUBAGENT_MODEL` if chosen (never set `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` — it would override the helper agents' own models); set `workflowSizeGuideline` if chosen; never write `ultracode`; append chosen deny rules to `permissions.deny` without duplicates. Valid strict JSON only.
 2. **Agent files**: for each selected agent, the path `.claude/agents/<name>.md` and its full content, rendered from `${CLAUDE_SKILL_DIR}/templates/<name>.md` with `{{MODEL}}` replaced and, in Explore, `{{AUTOCOMPACT}}` replaced by `autoCompactWindow: 100000` (Haiku) or the line removed. Keep the templates' `effort` values. Mark any file that will replace an existing one.
 3. **Rules block** (if chosen): target `CLAUDE.local.md` (personal) or `CLAUDE.md` (team). Render `templates/rules-block.md`, keeping only the lines for selected agents and dropping empty placeholder lines:
    - `{{RULE_EXPLORE}}` → `- Use the Explore subagent for searches across 10+ files or 3+ independent places; ask it for paths and line refs, not file contents. Do small, targeted lookups yourself.`
    - `{{RULE_TESTS}}` → `- Run single tests directly. Delegate full test-suite runs, builds and long log output to the test-runner subagent.`
    - `{{RULE_AUDIT}}` → `- Before declaring a multi-file change done, run the audit subagent on the current diff and the task description.`
+   - `{{RULE_LOOPS}}` (only with "Yes + stop fix loops") → `- If a fix-and-retest loop goes two rounds in a row without progress, stop and report what you tried instead of trying again.`
    - `{{RULE_RETURN}}` (always, when any agent is selected) → `- When delegating, say exactly what to return (short summary, path:line refs) and require evidence — the command run and its output, not just "tests pass". Never run two subagents that edit the same file.`
    If a repo-mode block already exists, replace only the text between the markers. If the target file doesn't exist, it will be created containing only the block. **AGENTS.md caveat:** for personal scope, if the repo has `AGENTS.md` and no `CLAUDE.md` / `.claude/CLAUDE.md` / `CLAUDE.local.md`, put `@AGENTS.md` as the first line inside the block and explain why.
 4. **Git exclusion** (personal scope, git repo only): the exact lines to add to `.git/info/exclude` under a `# repo-mode` line — every file setup will create that is not already ignored: the settings file, `CLAUDE.local.md`, each agent file, and `.claude/repo-mode.json`. Check with `git check-ignore -q <path>` and skip paths already ignored.
@@ -107,7 +111,7 @@ If any step fails, stop, report exactly what was and wasn't written, and keep th
 
 Tell the user, briefly:
 - What changed, file by file.
-- **Start a new Claude Code session** in this repo for the model, effort, env and agents to load.
+- **Start a new Claude Code session** in this repo for the model, effort, env, workflow size and agents to load.
 - How to check: `/status` shows the model and which settings files loaded; when the advisor is active, Claude Code shows an `Advisor Tool (experimental) is on` notification at session start; asking Claude "which subagents are available?" lists the agents; `/usage` breaks usage down per subagent. Warn them **not** to pick anything in the `/advisor` picker: that saves the advisor to their global settings for every repo.
 - `/repo-mode:status` shows the current state; `/repo-mode:off` undoes everything recorded in `.claude/repo-mode.json`.
 - For team scope: which files to commit.
