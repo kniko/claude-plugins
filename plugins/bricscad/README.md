@@ -1,26 +1,29 @@
 # bricscad
 
-Drive a running **BricsCAD** (Windows, V26, COM automation) from Claude Code.
+**Ελληνικά** · [English](README.en.md)
 
-- **MCP server** `bricscad` (`server/server.py`, run with `uv`): status, open/save drawings, LISP and command
-  line, entities/solids/layers/extents queries, delete, zoom, screenshot, plot to PDF, DXF export, and
-  `export_geometry` (JSON; `server/blender_import.py` brings it into Blender).
-- **Skill** `bricscad`: how to draw plans, sections and elevations with Greek text, measured dimensions,
-  concrete hatches and 3D solids - Python generators that write ASCII LISP (`scripts/cadlisp.py`),
-  reading results back, and the pitfalls (PNGOUT hang, PDF Save As dialog, lost selections).
+Χειρισμός ενός ανοιχτού **BricsCAD** (Windows, V26, COM automation) από το Claude Code.
 
-## Requirements
+- **MCP server** `bricscad` (`server/server.py`, τρέχει με `uv`): κατάσταση, άνοιγμα και αποθήκευση σχεδίων,
+  LISP και γραμμή εντολών, ερωτήματα για entities, solids, layers και extents, διαγραφή, zoom, screenshot,
+  plot σε PDF, εξαγωγή DXF, και `export_geometry` (JSON· το `server/blender_import.py` το φέρνει στο Blender).
+- **Skill** `bricscad`: πώς σχεδιάζονται κατόψεις, τομές και όψεις με ελληνικό κείμενο, μετρημένες διαστάσεις,
+  διαγραμμίσεις σκυροδέματος και 3D solids. Python generators που γράφουν ASCII LISP (`scripts/cadlisp.py`),
+  ανάγνωση των αποτελεσμάτων, και οι παγίδες (κόλλημα του PNGOUT, το παράθυρο «Save As» του PDF,
+  χαμένες επιλογές).
 
-- Windows with BricsCAD running (or let `start_bricscad` launch it).
-- [`uv`](https://docs.astral.sh/uv/) on PATH (`winget install astral-sh.uv`); the server's dependencies
-  (`mcp`, `pywin32`, `pillow`) are installed by `uv` on first run.
+## Απαιτήσεις
 
-## Install
+- Windows με ανοιχτό το BricsCAD (ή άφησε το `start_bricscad` να το ξεκινήσει).
+- [`uv`](https://docs.astral.sh/uv/) στο PATH (`winget install astral-sh.uv`). Τις εξαρτήσεις του server
+  (`mcp`, `pywin32`, `pillow`) τις εγκαθιστά το `uv` στο πρώτο τρέξιμο.
+
+## Εγκατάσταση
 
 ```bash
 claude plugin marketplace add kniko/claude-plugins
 claude plugin install bricscad@kniko-tools
 ```
 
-If you had the server added by hand before (`claude mcp add bricscad ...`), remove that entry
-(`claude mcp remove bricscad -s user`) so it does not run twice.
+Αν είχες προσθέσει παλιότερα τον server με το χέρι (`claude mcp add bricscad ...`), αφαίρεσε εκείνη την
+εγγραφή (`claude mcp remove bricscad -s user`), ώστε να μην τρέχει δύο φορές.
