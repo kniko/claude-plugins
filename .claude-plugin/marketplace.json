@@ -9,6 +9,11 @@
       "name": "repo-mode",
       "source": "./plugins/repo-mode",
       "description": "Per-repo model/advisor/subagent setup wizard: /repo-mode:setup, /repo-mode:status, /repo-mode:off"
+    },
+    {
+      "name": "bricscad",
+      "source": "./plugins/bricscad",
+      "description": "Drive a running BricsCAD (Windows) from Claude: MCP server + skill for plans, sections, elevations, measured dimensions, Greek text and 3D solids"
     }
   ]
 }

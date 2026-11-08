@@ -1,0 +1,11 @@
+{
+  "name": "bricscad",
+  "version": "1.0.0",
+  "description": "Drive a running BricsCAD (Windows, COM) from Claude: MCP server with drawing/3D/export tools plus a skill for plans, sections, elevations, measured dimensions, Greek text and 3D solids",
+  "author": {
+    "name": "kniko"
+  },
+  "repository": "https://github.com/kniko/claude-plugins",
+  "license": "MIT",
+  "keywords": ["bricscad", "cad", "dwg", "lisp", "mcp"]
+}
