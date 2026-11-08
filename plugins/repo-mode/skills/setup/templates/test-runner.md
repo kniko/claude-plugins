@@ -1,7 +1,8 @@
 ---
 name: test-runner
-description: Runs a test command and reports the results. Use for full test-suite runs and any test or log run with long output. Not needed for a single quick test.
+description: Runs a test command and reports only the failures, verbatim. Use proactively for full test-suite runs, builds, and any test or log run with long output. Not needed for a single quick test.
 model: {{MODEL}}
+effort: low
 tools: Read, Grep, Glob, Bash
 omitClaudeMd: true
 ---

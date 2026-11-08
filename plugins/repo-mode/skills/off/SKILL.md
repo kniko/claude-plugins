@@ -1,6 +1,6 @@
 ---
 name: off
-description: Undo repo-mode in this repository — restores the previous model/advisor settings and removes the agents, rules block, deny rules and git-exclude lines that /repo-mode:setup added. Shows the plan and waits for approval before changing anything.
+description: Undo repo-mode in this repository — restores the previous model/advisor/effort/subagent-model settings and removes the agents, rules block, deny rules and git-exclude lines that /repo-mode:setup added. Shows the plan and waits for approval before changing anything.
 disable-model-invocation: true
 ---
 
@@ -21,8 +21,8 @@ Ground rules:
 
 ## Step 2 — Build the plan (no changes yet)
 
-1. **Settings file**: for `model` and `advisorModel`:
-   - If the current value still equals what setup wrote: restore `previousSettings` (remove the key if the previous value is `null`).
+1. **Settings file**: for each key in the state's `settings` that setup set (non-`null`): `model`, `advisorModel`, `effortLevel`, and `env.CLAUDE_CODE_SUBAGENT_MODEL` (the one entry inside `env`; a version-1 state file only has the first two):
+   - If the current value still equals what setup wrote: restore `previousSettings` (remove the key if the previous value is `null`). If `env` ends up empty, remove it; never touch other `env` entries.
    - If the current value differs (changed by hand after setup): show it and ask whether to keep it or restore the previous value.
    - Remove each entry in `denyRulesAdded` from `permissions.deny`. If `permissions.deny` ends up empty, remove it; if `permissions` ends up empty, remove it.
    - Keep every other key untouched.
@@ -44,4 +44,4 @@ Apply the approved plan. Re-read the settings file and confirm it is valid JSON.
 Then tell the user:
 - What was restored, edited, and deleted.
 - **Start a new Claude Code session** for the model change to take effect.
-- If `~/.claude/settings.json` sets `model` or `advisorModel`, those global values will now apply in this repo — mention them.
+- If `~/.claude/settings.json` sets `model`, `advisorModel`, `effortLevel` or `env.CLAUDE_CODE_SUBAGENT_MODEL`, those global values will now apply in this repo — mention them.
