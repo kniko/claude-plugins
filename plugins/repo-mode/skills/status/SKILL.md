@@ -17,6 +17,7 @@ Read-only. Do not create, edit, or delete anything. Talk to the user in the lang
    - Delegation rules block: present in which file / absent.
    - `permissions.deny` Read rules, and which of them repo-mode added.
    - Code-intelligence plugin recorded by repo-mode, if any.
+   - Test-output filter: whether `hooks.PreToolUse` has the repo-mode group, whether `.claude/hooks/repo-mode-filter-tests.sh` exists and is executable, and whether `jq` is on PATH (without it the hook does nothing).
 4. Flag problems:
    - Advisor/main pairs that the pairing table in `${CLAUDE_PLUGIN_ROOT}/skills/setup/reference.md` rejects (e.g. Opus or `opusplan` main + Sonnet advisor, Sonnet 5.5 main + Haiku advisor).
    - Main model Opus/`opusplan`/Fable with no `CLAUDE_CODE_SUBAGENT_MODEL` and no project `Explore` agent: general-purpose, Plan and (on subscriptions) Explore subagents run on the expensive model.

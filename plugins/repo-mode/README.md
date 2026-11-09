@@ -42,6 +42,7 @@ claude plugin marketplace remove local-tools
 | Ένα model κάνει και τον σχεδιασμό και την εκτέλεση. | Κύριο Sonnet (ή Haiku) με **Opus advisor**, ή `opusplan`. | Ο advisor διαβάζει τη συζήτηση μόνο στα σημεία απόφασης. Στο blog της Anthropic, Sonnet με Opus advisor έδωσε +2.7 μονάδες στο SWE-bench Multilingual με 11.9% χαμηλότερο κόστος ανά task, και Haiku με Opus advisor 41.2% αντί για 19.7% στο BrowseComp (μετρήσεις με παλαιότερα models). |
 | Ένας subagent σε άλλο model από το κύριο δεν παίρνει το effort του session. | Κάθε template ορίζει `effort`: `low` για αναζήτηση και tests, `high` για review. | Λιγότερο «σκέψιμο» στις μηχανικές δουλειές, περισσότερο στο review. |
 | Τα πλήρη tests και τα logs γεμίζουν το κύριο context. | Ο **test-runner** επιστρέφει μόνο τα failures, αυτολεξεί. | Ο θόρυβος μένει έξω. Στο κύριο session φτάνει μόνο η σύνοψη. |
+| Κάθε `pytest`, `npm test` ή `go test` φέρνει όλη την έξοδο μέσα στο context, ακόμα και όταν όλα περνούν. | Προαιρετικό **φίλτρο εξόδου tests** (PreToolUse hook): το Claude βλέπει μόνο τα failures και τις τελευταίες 20 γραμμές. Το exit code μένει το πραγματικό και η πλήρης έξοδος σώζεται σε προσωρινό αρχείο. | Λιγότερα tokens σε **κάθε** εκτέλεση tests, και στο κύριο session. Βασίζεται στο παράδειγμα των docs, βελτιωμένο ώστε να μη χάνεται το exit code. |
 | Το review το κάνει το ίδιο session που έγραψε τον κώδικα. | Ο **audit** κάνει ανεξάρτητο review του diff, χωρίς το ιστορικό της συζήτησης και χωρίς σχόλια για στυλ. | Ένας «φρέσκος» reviewer δεν έχει δει το σκεπτικό του κώδικα, άρα δεν επηρεάζεται από αυτό. |
 | Το Claude μαντεύει πότε να αναθέσει, και μπορεί να επαναλαμβάνει διορθώσεις χωρίς τέλος. | Σύντομοι κανόνες στο `CLAUDE.local.md`. Προαιρετικά: σταμάτα έναν κύκλο διορθώσεων μετά από δύο γύρους χωρίς πρόοδο. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
 | Vendored ή generated κώδικας μπαίνει στις αναζητήσεις. | Read deny rules μόνο για tracked φακέλους, όπως `vendor/` και `dist/`. | Λιγότερα άχρηστα αρχεία στο context. |
@@ -75,7 +76,7 @@ flowchart TD
     S(["/repo-mode:setup"]) --> WZ
     subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
         direction LR
-        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3–4<br/>effort · workflows<br/>κανόνες · deny · LSP"] --> W4["Σχέδιο<br/>before / after"]
+        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3–4<br/>effort · workflows · κανόνες<br/>deny · φίλτρο tests · LSP"] --> W4["Σχέδιο<br/>before / after"]
     end
     WZ --> Q{"Έγκριση;"}
     Q -->|"Ναι"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
@@ -88,7 +89,7 @@ flowchart TD
 
 | Εντολή | Τι κάνει |
 |---|---|
-| `/repo-mode:setup` | Ρωτάει main model, advisor, subagents, scope, models των subagents, model για τους υπόλοιπους subagents και τα workflows, effort, μέγεθος workflows, κανόνες, deny rules και LSP. Δείχνει όλες τις αλλαγές (before/after) και εφαρμόζει μόνο μετά την έγκρισή σου. |
+| `/repo-mode:setup` | Ρωτάει main model, advisor, subagents, scope, models των subagents, model για τους υπόλοιπους subagents και τα workflows, effort, μέγεθος workflows, κανόνες, deny rules, φίλτρο εξόδου tests και LSP. Δείχνει όλες τις αλλαγές (before/after) και εφαρμόζει μόνο μετά την έγκρισή σου. |
 | `/repo-mode:status` | Μόνο ανάγνωση: τι ισχύει τώρα σε αυτό το repo και από ποιο αρχείο προέρχεται. Επισημαίνει και ακριβές ρυθμίσεις, π.χ. subagents που τρέχουν σε Opus. |
 | `/repo-mode:off` | Αναιρεί ακριβώς ό,τι έγραψε το setup (από το `.claude/repo-mode.json`), επαναφέρει τις προηγούμενες τιμές, και ζητάει έγκριση πριν σβήσει οτιδήποτε. |
 
@@ -106,12 +107,14 @@ flowchart TD
 | Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
 | Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
 | Κανόνες ανάθεσης | Ναι | Ναι + σταμάτημα κύκλων διορθώσεων · Όχι |
+| Φίλτρο εξόδου tests | Ναι (θέλει `bash` και `jq`) | Όχι |
 
 ## Τι γράφει σε κάθε repo
 
 **Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
-- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`
+- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (το φίλτρο tests)
 - `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (όσα επιλέξεις)
+- `.claude/hooks/repo-mode-filter-tests.sh`: το script του φίλτρου tests, αν το επιλέξεις
 - `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo
 - `.git/info/exclude`: όλα τα παραπάνω, ώστε να μη φαίνονται στο `git status` (το `.gitignore` του repo δεν αλλάζει)
@@ -121,6 +124,7 @@ flowchart TD
 ## Σημειώσεις
 
 - **Ultracode:** το repo-mode δεν το ενεργοποιεί ποτέ. Με το ultracode, το Claude γράφει workflow για κάθε σημαντική δουλειά, με effort `xhigh`, και τα docs λένε ότι κάθε αίτημα καίει περισσότερα tokens και αργεί. Άνοιξέ το μόνο για μια μεγάλη δουλειά, με `/effort ultracode`, και κλείσ' το με `/effort ultracode off`. Οι workflow agents που δεν έχουν δικό τους model παίρνουν τότε αυτό που όρισε το repo-mode.
+- **Φίλτρο tests:** πιάνει μόνο απλές εντολές tests, χωρίς `;`, `|`, `&&` κ.λπ. Όλες οι άλλες εντολές περνούν όπως είναι. Χωρίς `jq` δεν κάνει τίποτα. Η εντολή που τρέχει τελικά είναι η «τυλιγμένη», οπότε ένας κανόνας άδειας όπως `Bash(pytest *)` δεν ταιριάζει πια και το Claude μπορεί να ζητήσει έγκριση. Στα native Windows δεν έχει δοκιμαστεί. Το `/hooks` δείχνει αν είναι ενεργό.
 - Ο advisor είναι experimental και δουλεύει μόνο μέσω Anthropic API, όχι Bedrock, Vertex ή Foundry. Δεν λειτουργεί αν έχει οριστεί `DISABLE_TELEMETRY`. Κάθε κλήση του ξαναδιαβάζει όλη τη συζήτηση, χωρίς cache, με τις τιμές του advisor model. Αξίζει σε μεγάλες δουλειές πολλών βημάτων, όχι σε μικρές.
 - Μην αλλάζεις advisor από τον picker του `/advisor`: σώζει στις global ρυθμίσεις και ισχύει σε όλα τα repos.
 - Ο `audit` κάνει παρόμοια δουλειά με το ενσωματωμένο `/code-review`. Ο `audit` τρέχει αυτόματα πριν το «τελείωσα», ενώ το `/code-review` το τρέχεις όποτε θες.
