@@ -42,6 +42,7 @@ Out of the box, Claude Code runs almost everything on the same model, usually th
 | One model does both planning and execution. | Sonnet (or Haiku) main model with an **Opus advisor**, or `opusplan`. | The advisor reads the conversation only at decision points. In Anthropic's blog, Sonnet with an Opus advisor scored +2.7 points on SWE-bench Multilingual at 11.9% lower cost per task, and Haiku with an Opus advisor scored 41.2% vs 19.7% solo on BrowseComp (measured on earlier models). |
 | A subagent on a different model from the main session doesn't get the session's effort level. | Each template sets `effort`: `low` for search and tests, `high` for review. | Less thinking spent on mechanical work, more on review. |
 | Full test runs and logs flood the main context. | **test-runner** returns only the failures, verbatim. | The noise stays out; only the summary reaches the main session. |
+| Every `pytest`, `npm test` or `go test` brings its whole output into context, even when everything passes. | Optional **test-output filter** (PreToolUse hook): Claude sees only the failures and the last 20 lines. The exit code stays real and the full output is saved to a temp file. | Fewer tokens on **every** test run, in the main session too. Based on the docs example, improved so the exit code isn't lost. |
 | The session that wrote the code also reviews it. | **audit** reviews the diff independently, without the conversation history and without style comments. | A fresh reviewer hasn't seen the reasoning behind the code, so it isn't swayed by it. |
 | Claude guesses when to delegate, and can keep retrying fixes forever. | Short rules in `CLAUDE.local.md`. Optional: stop a fix loop after two rounds without progress. | Delegation only when it pays. Anthropic estimates multi-agent setups use 3–10× more tokens, so delegating makes sense only for 10+ files, 3+ independent pieces of work, or an independent check. |
 | Vendored or generated code shows up in searches. | Read deny rules, only for tracked folders such as `vendor/` and `dist/`. | Fewer useless files in context. |
@@ -75,7 +76,7 @@ flowchart TD
     S(["/repo-mode:setup"]) --> WZ
     subgraph WZ ["Wizard · questions and reads only"]
         direction LR
-        W0["Check repo<br/>version · settings"] --> W1["Round 1<br/>model · advisor<br/>agents · scope"] --> W2["Round 2<br/>model per agent<br/>+ the rest"] --> W3["Rounds 3–4<br/>effort · workflows<br/>rules · deny · LSP"] --> W4["Plan<br/>before / after"]
+        W0["Check repo<br/>version · settings"] --> W1["Round 1<br/>model · advisor<br/>agents · scope"] --> W2["Round 2<br/>model per agent<br/>+ the rest"] --> W3["Rounds 3–4<br/>effort · workflows · rules<br/>deny · test filter · LSP"] --> W4["Plan<br/>before / after"]
     end
     WZ --> Q{"Approve?"}
     Q -->|"Yes"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
@@ -88,7 +89,7 @@ At the approval step you can also change your answers: the wizard goes back to R
 
 | Command | What it does |
 |---|---|
-| `/repo-mode:setup` | Asks for main model, advisor, subagents, scope, subagent models, the model for other subagents and workflows, effort, workflow size, rules, deny rules and LSP. Shows every change (before/after) and applies only after you approve. |
+| `/repo-mode:setup` | Asks for main model, advisor, subagents, scope, subagent models, the model for other subagents and workflows, effort, workflow size, rules, deny rules, test-output filter and LSP. Shows every change (before/after) and applies only after you approve. |
 | `/repo-mode:status` | Read-only: what applies in this repo right now and which file it comes from. Also flags costly setups, e.g. subagents running on Opus. |
 | `/repo-mode:off` | Undoes exactly what setup wrote (from `.claude/repo-mode.json`), restores the previous values, and asks for approval before deleting anything. |
 
@@ -106,12 +107,14 @@ After `setup` or `off`, start a new session in the repo.
 | Effort | model default (`medium`) | `high` / `xhigh` for hard work, `low` for routine work |
 | Workflow size | default (`medium`, or `small` on Pro) | `small` to save · `large` / `unrestricted` for big refactors |
 | Delegation rules | Yes | Yes + stop fix loops · No |
+| Test-output filter | Yes (needs `bash` and `jq`) | No |
 
 ## What it writes in each repo
 
 **"Only me" scope (default)**: nothing is committed.
-- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`
+- `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (the test filter)
 - `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (whichever you pick)
+- `.claude/hooks/repo-mode-filter-tests.sh`: the test-filter script, if you pick it
 - `CLAUDE.local.md`: a block of delegation rules between `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: what changed, so undo is exact
 - `.git/info/exclude`: all of the above, so they don't show in `git status` (the repo's `.gitignore` is untouched)
@@ -121,6 +124,7 @@ After `setup` or `off`, start a new session in the repo.
 ## Notes
 
 - **Ultracode:** repo-mode never turns it on. With ultracode, Claude writes a workflow for every substantive task at `xhigh` effort, and the docs say each request uses more tokens and takes longer. Turn it on only for a big task with `/effort ultracode`, and off again with `/effort ultracode off`. Workflow agents without a model of their own then use the one repo-mode set.
+- **Test filter:** it only catches plain test commands, with no `;`, `|`, `&&` etc. Every other command passes through unchanged. Without `jq` it does nothing. The command that actually runs is the wrapped one, so an allow rule like `Bash(pytest *)` no longer matches and Claude may ask for approval. Untested on native Windows. `/hooks` shows whether it's active.
 - The advisor is experimental and works only through the Anthropic API, not Bedrock, Vertex or Foundry. It doesn't work if `DISABLE_TELEMETRY` is set. Each call re-reads the whole conversation, uncached, at the advisor model's rates. It pays off on long multi-step work, not on short tasks.
 - Don't change the advisor from the `/advisor` picker: it saves to your global settings and applies to every repo.
 - `audit` does similar work to the built-in `/code-review`. `audit` runs automatically before "done"; `/code-review` runs whenever you call it.

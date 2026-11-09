@@ -78,6 +78,15 @@ Other advisor facts:
 - Limits: 16 concurrent agents by default (`CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS`, 1–256), 1,000 agents per run; a "Large workflow" warning appears above 25 agents or 1.5M projected tokens.
 - Off switches: `"disableWorkflows": true` or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
 
+## Test-output filter hook
+
+- Based on the PreToolUse example in the costs docs ("this PreToolUse hook filters test output to show only failures"). A hook returns `hookSpecificOutput.updatedInput` to replace the Bash command before it runs.
+- repo-mode's version (`templates/hooks/repo-mode-filter-tests.sh`) improves on the docs example: it keeps the test runner's exit code (`set -o pipefail` with a filter that always succeeds), shows short output (≤ 60 lines) in full, otherwise the failure context (up to 100 lines) plus the last 20 lines, and saves the full output to a temp file whose path it prints.
+- It only matches plain test commands with no shell operators (same character rule as the docs example); everything else passes through. It fails open: without `jq`, or on unexpected input, it returns `{}`.
+- Registered in the settings file as `hooks.PreToolUse` → `{"matcher": "Bash", "hooks": [{"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/repo-mode-filter-tests.sh"}]}`. Hooks are valid in `.claude/settings.local.json`.
+- It returns no `permissionDecision`, like the docs example, so the rewritten command goes through the normal permission check: an allow rule such as `Bash(pytest *)` won't match the wrapped command. It does not affect commands started with the Monitor tool. It needs `bash` and `jq`; on native Windows it is unverified.
+- Verify with `/hooks` (listed under PreToolUse) or `claude --debug-file ./claude-debug.txt` (a `modified tool input keys` line when it rewrites a command).
+
 ## Delegation guidance (Anthropic blog and best-practices)
 
 - Delegate when gathering context means reading 10+ files, when there are 3+ independent pieces of work, or when verification should not be influenced by the conversation.
@@ -141,13 +150,15 @@ Anthropic's official marketplace (`claude-plugins-official`) has code intelligen
   "previousSettings": { "model": null, "advisorModel": null, "effortLevel": null, "workflowSizeGuideline": null, "env.CLAUDE_CODE_SUBAGENT_MODEL": null },
   "denyRulesAdded": ["Read(./**/vendor/**/*)"],
   "agentsCreated": [".claude/agents/Explore.md", ".claude/agents/test-runner.md", ".claude/agents/audit.md"],
+  "hookScriptsCreated": [".claude/hooks/repo-mode-filter-tests.sh"],
+  "hooksAdded": [{ "event": "PreToolUse", "matcher": "Bash", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/repo-mode-filter-tests.sh" }],
   "rulesFile": "CLAUDE.local.md",
   "rulesFileCreatedBySetup": true,
   "agentsMdImport": false,
   "settingsFileCreatedBySetup": false,
-  "excludeLinesAdded": [".claude/settings.local.json", "CLAUDE.local.md", ".claude/agents/Explore.md", ".claude/repo-mode.json"],
+  "excludeLinesAdded": [".claude/settings.local.json", "CLAUDE.local.md", ".claude/agents/Explore.md", ".claude/hooks/repo-mode-filter-tests.sh", ".claude/repo-mode.json"],
   "lspPlugin": null
 }
 ```
 
-In `settings`, `null` means setup did not set that key. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat any missing key as `null`.
+In `settings`, `null` means setup did not set that key. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat any missing key as `null` and any missing list (`hooksAdded`, `hookScriptsCreated`) as empty.

@@ -16,8 +16,8 @@ Ground rules:
 
 ## Step 1 — Read the state
 
-1. Read `.claude/repo-mode.json` at the repository root. If it doesn't exist, say repo-mode isn't set up here (or was set up by hand), show any repo-mode traces you can find — agent files containing `<!-- managed by repo-mode -->`, a `<!-- repo-mode:start -->` block in `CLAUDE.md` / `CLAUDE.local.md`, a `# repo-mode` section in `.git/info/exclude` — and ask whether to remove those. Stop if the user says no.
-2. Read the current settings file named in the state, each file in `agentsCreated`, the `rulesFile`, and `.git/info/exclude`.
+1. Read `.claude/repo-mode.json` at the repository root. If it doesn't exist, say repo-mode isn't set up here (or was set up by hand), show any repo-mode traces you can find — agent files containing `<!-- managed by repo-mode -->`, a `<!-- repo-mode:start -->` block in `CLAUDE.md` / `CLAUDE.local.md`, a `# repo-mode` section in `.git/info/exclude`, `.claude/hooks/repo-mode-filter-tests.sh` and its PreToolUse entry — and ask whether to remove those. Stop if the user says no.
+2. Read the current settings file named in the state, each file in `agentsCreated` and `hookScriptsCreated`, the `rulesFile`, and `.git/info/exclude`.
 
 ## Step 2 — Build the plan (no changes yet)
 
@@ -28,12 +28,14 @@ Ground rules:
    - Keep every other key untouched.
    - If `settingsFileCreatedBySetup` is true and the file would end up as `{}`, plan to delete it.
    - Show the full JSON before and after.
-2. **Agent files** in `agentsCreated`: plan to delete each one that still contains `<!-- managed by repo-mode -->`. If one no longer has the marker, or is missing, list it separately and ask.
-3. **Rules block**: remove everything from `<!-- repo-mode:start -->` to `<!-- repo-mode:end -->` inclusive in `rulesFile`. If `rulesFileCreatedBySetup` is true and nothing but whitespace remains, plan to delete the file. Show the before/after of that file.
-4. **Git exclude**: remove the lines in `excludeLinesAdded` and the `# repo-mode` header line from `.git/info/exclude`. Leave all other lines.
-5. **Code intelligence plugin**: if `lspPlugin` is set, offer `claude plugin disable <plugin> --scope local` (or uninstall) — as a separate yes/no, since the user may want to keep it.
-6. **State file**: delete `.claude/repo-mode.json`.
-7. If `.claude/agents/` (or `.claude/`) would be left empty, plan to remove the empty folder only if setup created it; otherwise leave it.
+   - For each entry in `hooksAdded`: remove from `hooks.<event>` the group whose matcher and command match it exactly; leave every other hook. If `hooks.<event>` ends up empty, remove it; if `hooks` ends up empty, remove it.
+2. **Hook scripts** in `hookScriptsCreated`: plan to delete each one that still contains `# managed by repo-mode`; otherwise list it separately and ask. Remove `.claude/hooks/` only if it ends up empty and setup created it.
+3. **Agent files** in `agentsCreated`: plan to delete each one that still contains `<!-- managed by repo-mode -->`. If one no longer has the marker, or is missing, list it separately and ask.
+4. **Rules block**: remove everything from `<!-- repo-mode:start -->` to `<!-- repo-mode:end -->` inclusive in `rulesFile`. If `rulesFileCreatedBySetup` is true and nothing but whitespace remains, plan to delete the file. Show the before/after of that file.
+5. **Git exclude**: remove the lines in `excludeLinesAdded` and the `# repo-mode` header line from `.git/info/exclude`. Leave all other lines.
+6. **Code intelligence plugin**: if `lspPlugin` is set, offer `claude plugin disable <plugin> --scope local` (or uninstall) — as a separate yes/no, since the user may want to keep it.
+7. **State file**: delete `.claude/repo-mode.json`.
+8. If `.claude/agents/` (or `.claude/`) would be left empty, plan to remove the empty folder only if setup created it; otherwise leave it.
 
 Show the whole plan, listing every file that will be **deleted** separately from files that will be **edited**. Then ask with `AskUserQuestion` (header "Undo?"): `Apply` · `Cancel`. If the tool isn't available, ask in plain text and wait.
 
