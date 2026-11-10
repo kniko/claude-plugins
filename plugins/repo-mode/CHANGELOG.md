@@ -2,6 +2,12 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-11-11
+
+### Added
+- Optional **`escalate` subagent** (read-only, `fable` or `opus`, effort high) for problems the advisor and two of the main session's own attempts could not solve, plus a delegation rule that says when to call it. The advisor takes only one model, so this is the closest to "Opus advisor, Fable when it's really hard". The main session decides whether to call it.
+- Setup: `escalate` in the subagents question; a model question (Fable or Opus) in Round 4.
+
 ## [1.4.0] - 2026-11-10
 
 ### Added
@@ -52,6 +58,7 @@ All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepach
 - `/repo-mode:status` (read-only report) and `/repo-mode:off` (exact undo from `.claude/repo-mode.json`).
 - Personal scope hides all files via `.git/info/exclude`.
 
+[1.5.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.5.0
 [1.4.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.4.0
 [1.3.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.3.0
 [1.2.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.2.0

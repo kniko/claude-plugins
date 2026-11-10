@@ -3,6 +3,7 @@
 {{RULE_EXPLORE}}
 {{RULE_TESTS}}
 {{RULE_AUDIT}}
+{{RULE_ESCALATE}}
 {{RULE_LOOPS}}
 {{RULE_RETURN}}
 <!-- repo-mode:end -->
