@@ -8,7 +8,7 @@
     {
       "name": "repo-mode",
       "source": "./plugins/repo-mode",
-      "description": "Per-repo model/effort/advisor/subagent setup wizard that routes work to cheaper models: /repo-mode:setup, /repo-mode:status, /repo-mode:off"
+      "description": "Per-repo model/effort/advisor/subagent setup wizard that routes work to cheaper models: /repo-mode:setup, /repo-mode:status, /repo-mode:handoff, /repo-mode:off"
     },
     {
       "name": "bricscad",

@@ -45,6 +45,8 @@ Out of the box, Claude Code runs almost everything on the same model, usually th
 | Every `pytest`, `npm test` or `go test` brings its whole output into context, even when everything passes. | Optional **test-output filter** (PreToolUse hook): Claude sees only the failures and the last 20 lines. The exit code stays real and the full output is saved to a temp file. | Fewer tokens on **every** test run, in the main session too. Based on the docs example, improved so the exit code isn't lost. |
 | The session that wrote the code also reviews it. | **audit** reviews the diff independently, without the conversation history and without style comments. | A fresh reviewer hasn't seen the reasoning behind the code, so it isn't swayed by it. |
 | The advisor takes one model, and the hardest problems may need a stronger one. | Optional read-only **escalate** subagent on Fable, plus a rule: call it only after the advisor and two own attempts failed. | The expensive model is used only when stuck, not for every turn. The main session must brief it; it doesn't see the conversation, and each call is billed at Fable prices. |
+| `--continue` or `--resume` on a long conversation re-reads the whole history, uncached, on the first message. | `/repo-mode:handoff` writes a short `HANDOFF.md`; the next session starts fresh and reads only that. | A small context instead of the whole old one. |
+| Claude can read `.env` files and SSH keys. | Optional Read deny rules for `.env`, `~/.ssh` and `secrets/`. | Safety, not cost. It stops Claude's file tools and recognized file commands such as `cat`, not scripts that open files themselves. |
 | Claude guesses when to delegate, and can keep retrying fixes forever. | Short rules in `CLAUDE.local.md`. Optional: stop a fix loop after two rounds without progress. | Delegation only when it pays. Anthropic estimates multi-agent setups use 3–10× more tokens, so delegating makes sense only for 10+ files, 3+ independent pieces of work, or an independent check. |
 | Vendored or generated code shows up in searches. | Read deny rules, only for tracked folders such as `vendor/` and `dist/`. | Fewer useless files in context. |
 
@@ -94,6 +96,7 @@ At the approval step you can also change your answers: the wizard goes back to R
 |---|---|
 | `/repo-mode:setup` | Asks for main model, advisor, subagents, scope, subagent models, the model for other subagents and workflows, effort, workflow size, rules, deny rules, test-output filter and LSP. Shows every change (before/after) and applies only after you approve. |
 | `/repo-mode:status` | Read-only: what applies in this repo right now and which file it comes from. Also flags costly setups, e.g. subagents running on Opus. |
+| `/repo-mode:handoff` | Writes `HANDOFF.md` (goal, state, next steps, decisions) so the next session starts fresh. Cheaper than resuming a long conversation, which re-reads the whole history uncached. Writes only that file. |
 | `/repo-mode:off` | Undoes exactly what setup wrote (from `.claude/repo-mode.json`), restores the previous values, and asks for approval before deleting anything. |
 
 After `setup` or `off`, start a new session in the repo.
