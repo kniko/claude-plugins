@@ -54,39 +54,13 @@ To see where tokens go, `/usage` shows consumption per subagent.
 
 ## How the work is split
 
-```mermaid
-flowchart TD
-    U(["You"]) --> M["Main session<br/>Sonnet · effort medium"]
-    M -.->|"decision points"| A[["Advisor · Opus<br/>→ plan / correction"]]
-    subgraph SA ["Subagents · own context, return only a summary"]
-        E["Explore<br/>Haiku · low<br/>→ path:line"]
-        T["test-runner<br/>Haiku · low<br/>→ failures only"]
-        R["audit<br/>Sonnet · high<br/>→ findings + evidence"]
-        X["escalate<br/>Fable · high<br/>→ diagnosis + next step"]
-        G["general-purpose / Plan<br/>Sonnet<br/>→ summary"]
-    end
-    M -->|"10+ files"| E
-    M -->|"tests · logs"| T
-    M -->|"before «done»"| R
-    M -->|"everything else"| G
-    M -.->|"advisor + 2 tries failed"| X
-```
+![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split.en.svg)
 
 Each subagent starts with its own clean context, without CLAUDE.md (`omitClaudeMd: true`) and without the Agent tool, so it can't start subagents of its own. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
 
 ## How the setup is created
 
-```mermaid
-flowchart TD
-    S(["/repo-mode:setup"]) --> WZ
-    subgraph WZ ["Wizard · questions and reads only"]
-        direction LR
-        W0["Check repo<br/>version · settings"] --> W1["Round 1<br/>model · advisor<br/>agents · scope"] --> W2["Round 2<br/>model per agent<br/>+ the rest"] --> W3["Rounds 3–4<br/>effort · workflows · rules<br/>deny · test filter · LSP"] --> W4["Plan<br/>before / after"]
-    end
-    WZ --> Q{"Approve?"}
-    Q -->|"Yes"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
-    Q -->|"No"| X(["Nothing is written"])
-```
+![Diagram: the setup wizard asks and reads only, shows a plan, and writes files only after approval](docs/setup-flow.en.svg)
 
 At the approval step you can also change your answers: the wizard goes back to Round 1. A model/advisor pair that isn't allowed is asked again in the same round. With the "Whole team" scope the files are `.claude/settings.json` and `CLAUDE.md`, for committing.
 
