@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="1000" height="500" role="img" aria-labelledby="t d" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+<title id="t">How the work is split</title><desc id="d">The main session delegates to subagents with their own context; the advisor is consulted at decision points; escalate is called only when the advisor and two tries failed.</desc>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" fill="#8b949e"/></marker>
+</defs>
+<rect width="1000" height="500" rx="14" fill="#0d1117" stroke="#30363d"/>
+
+<rect x="440" y="22" width="120" height="34" rx="17" fill="#1c2330" stroke="#30363d"/><text x="500" y="44" font-size="14" fill="#e6edf3" font-weight="600" text-anchor="middle" >You</text>
+<path d="M500 56 V84" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="350" y="84" width="300" height="92" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="350" y="84" width="5" height="92" rx="2.5" fill="#58a6ff"/>
+<text x="368" y="114" font-size="16" fill="#e6edf3" font-weight="600" text-anchor="start" >Main session</text>
+<text x="368" y="137" font-size="12.5" fill="#58a6ff" font-weight="600" text-anchor="start" >Sonnet 5.5 · effort medium</text>
+<text x="368" y="156" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >talks · edits code</text>
+<rect x="770" y="84" width="200" height="92" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="770" y="84" width="5" height="92" rx="2.5" fill="#bc8cff"/>
+<text x="788" y="114" font-size="16" fill="#e6edf3" font-weight="600" text-anchor="start" >Advisor</text>
+<text x="788" y="137" font-size="12.5" fill="#bc8cff" font-weight="600" text-anchor="start" >Opus 5.5</text>
+<text x="788" y="156" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ plan / correction</text>
+<path d="M650 130 H770" fill="none" stroke="#8b949e" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a)" marker-start="url(#a)"/>
+<rect x="651.7" y="102.2" width="116.6" height="23.5" rx="11.8" fill="#1c2330" stroke="#30363d"/>
+<text x="710.0" y="118.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >decision points</text>
+<path d="M500 176 V212" fill="none" stroke="#8b949e" stroke-width="1.6"/>
+<path d="M126.0 212 H874.0" fill="none" stroke="#8b949e" stroke-width="1.6"/>
+<rect x="20" y="276" width="960" height="204" rx="14" fill="#161b22" fill-opacity="0.55" stroke="#30363d" stroke-dasharray="6 5"/><text x="500" y="466" font-size="12" fill="#8b949e" font-weight="500" text-anchor="middle" >Subagents · own context, return only a summary</text>
+<path d="M126.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="87.0" y="236.2" width="78.0" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="126.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >10+ files</text>
+<rect x="40" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="40" y="300" width="5" height="104" rx="2.5" fill="#3fb950"/>
+<text x="58" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Explore</text>
+<text x="58" y="353" font-size="12.5" fill="#3fb950" font-weight="600" text-anchor="start" >Haiku · low</text>
+<text x="58" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ path:line</text>
+<path d="M313.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="264.4" y="236.2" width="97.3" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="313.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >tests · logs</text>
+<rect x="227" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="227" y="300" width="5" height="104" rx="2.5" fill="#3fb950"/>
+<text x="245" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >test-runner</text>
+<text x="245" y="353" font-size="12.5" fill="#3fb950" font-weight="600" text-anchor="start" >Haiku · low</text>
+<text x="245" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ failures only</text>
+<path d="M500.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="448.1" y="236.2" width="103.7" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="500.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >before «done»</text>
+<rect x="414" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="414" y="300" width="5" height="104" rx="2.5" fill="#39c5cf"/>
+<text x="432" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >audit</text>
+<text x="432" y="353" font-size="12.5" fill="#39c5cf" font-weight="600" text-anchor="start" >Sonnet · high</text>
+<text x="432" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ findings + evidence</text>
+<path d="M687.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="628.7" y="236.2" width="116.6" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="687.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >everything else</text>
+<rect x="601" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="601" y="300" width="5" height="104" rx="2.5" fill="#39c5cf"/>
+<text x="619" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >general-purpose</text>
+<text x="619" y="353" font-size="12.5" fill="#39c5cf" font-weight="600" text-anchor="start" >Sonnet · also Plan</text>
+<text x="619" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ summary</text>
+<path d="M874.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<rect x="809.3" y="228.5" width="129.5" height="39.0" rx="9.0" fill="#0d1117" stroke="#30363d"/>
+<text x="874.0" y="245.0" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >advisor + 2 tries</text>
+<text x="874.0" y="260.5" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >failed</text>
+<rect x="788" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="788" y="300" width="5" height="104" rx="2.5" fill="#ff7eb6"/>
+<text x="806" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >escalate</text>
+<text x="806" y="353" font-size="12.5" fill="#ff7eb6" font-weight="600" text-anchor="start" >Fable · high</text>
+<text x="806" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ diagnosis +</text>
+<text x="806" y="391" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >   next step</text>
+</svg>

@@ -54,39 +54,13 @@ claude plugin marketplace remove local-tools
 
 ## Πώς μοιράζεται η δουλειά
 
-```mermaid
-flowchart TD
-    U(["Εσύ"]) --> M["Κύριο session<br/>Sonnet · effort medium"]
-    M -.->|"σημεία απόφασης"| A[["Advisor · Opus<br/>→ πλάνο / διόρθωση"]]
-    subgraph SA ["Subagents · δικό τους context, επιστρέφουν μόνο σύνοψη"]
-        E["Explore<br/>Haiku · low<br/>→ path:line"]
-        T["test-runner<br/>Haiku · low<br/>→ μόνο τα failures"]
-        R["audit<br/>Sonnet · high<br/>→ ευρήματα + αποδείξεις"]
-        X["escalate<br/>Fable · high<br/>→ διάγνωση + επόμενο βήμα"]
-        G["general-purpose / Plan<br/>Sonnet<br/>→ σύνοψη"]
-    end
-    M -->|"10+ αρχεία"| E
-    M -->|"tests · logs"| T
-    M -->|"πριν το «τέλος»"| R
-    M -->|"υπόλοιπα"| G
-    M -.->|"advisor + 2 προσπάθειες απέτυχαν"| X
-```
+![Διάγραμμα: το κύριο session, ο advisor και οι subagents, με το πότε χρησιμοποιείται καθένας](docs/work-split.el.svg)
 
 Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
 
 ## Πώς δημιουργούνται οι ρυθμίσεις
 
-```mermaid
-flowchart TD
-    S(["/repo-mode:setup"]) --> WZ
-    subgraph WZ ["Wizard · μόνο ερωτήσεις και ανάγνωση"]
-        direction LR
-        W0["Έλεγχος repo<br/>έκδοση · ρυθμίσεις"] --> W1["Γύρος 1<br/>model · advisor<br/>agents · scope"] --> W2["Γύρος 2<br/>model κάθε agent<br/>+ υπόλοιποι"] --> W3["Γύρος 3–4<br/>effort · workflows · κανόνες<br/>deny · φίλτρο tests · LSP"] --> W4["Σχέδιο<br/>before / after"]
-    end
-    WZ --> Q{"Έγκριση;"}
-    Q -->|"Ναι"| F["settings.local.json · agents/*.md<br/>CLAUDE.local.md · .git/info/exclude<br/>repo-mode.json"]
-    Q -->|"Όχι"| X(["Δεν γράφεται τίποτα"])
-```
+![Διάγραμμα: ο wizard μόνο ρωτά και διαβάζει, δείχνει σχέδιο και γράφει αρχεία μόνο μετά την έγκριση](docs/setup-flow.el.svg)
 
 Στην έγκριση μπορείς και να αλλάξεις απαντήσεις: ο wizard γυρίζει στον Γύρο 1. Μη επιτρεπτός συνδυασμός model/advisor ξαναρωτιέται στον ίδιο γύρο. Στο scope «Όλη η ομάδα» τα αρχεία είναι `.claude/settings.json` και `CLAUDE.md`, για commit.
 

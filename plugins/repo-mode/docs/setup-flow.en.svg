@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 440" width="1000" height="440" role="img" aria-labelledby="t d" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+<title id="t">How the setup is created</title><desc id="d">The wizard asks and reads only, shows a before/after plan, and writes files only after you approve.</desc>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" fill="#8b949e"/></marker>
+</defs>
+<rect width="1000" height="440" rx="14" fill="#0d1117" stroke="#30363d"/>
+<rect x="395" y="20" width="210" height="36" rx="18" fill="#1c2330" stroke="#58a6ff"/><text x="500" y="43" font-size="14" fill="#e6edf3" font-weight="600" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">/repo-mode:setup</text>
+<path d="M500 56 V84" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="20" y="84" width="960" height="176" rx="14" fill="#161b22" fill-opacity="0.55" stroke="#30363d" stroke-dasharray="6 5"/>
+<text x="40" y="108" font-size="12" fill="#8b949e" font-weight="500" text-anchor="start" >Wizard · questions and reads only</text>
+<rect x="40" y="122" width="168" height="120" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="40" y="122" width="5" height="120" rx="2.5" fill="#6e7681"/>
+<text x="58" y="152" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Check repo</text>
+<text x="58" y="171" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >version</text>
+<text x="58" y="190" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >settings</text>
+<path d="M210 182 H226" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="228" y="122" width="168" height="120" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="228" y="122" width="5" height="120" rx="2.5" fill="#58a6ff"/>
+<text x="246" y="152" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Round 1</text>
+<text x="246" y="171" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >model · advisor</text>
+<text x="246" y="190" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >agents · scope</text>
+<path d="M398 182 H414" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="416" y="122" width="168" height="120" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="416" y="122" width="5" height="120" rx="2.5" fill="#58a6ff"/>
+<text x="434" y="152" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Round 2</text>
+<text x="434" y="171" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >model per agent</text>
+<text x="434" y="190" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >+ the rest</text>
+<path d="M586 182 H602" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="604" y="122" width="168" height="120" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="604" y="122" width="5" height="120" rx="2.5" fill="#58a6ff"/>
+<text x="622" y="152" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Rounds 3–4</text>
+<text x="622" y="171" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >effort · workflows</text>
+<text x="622" y="190" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >rules · deny</text>
+<text x="622" y="209" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >secrets · escalate</text>
+<text x="622" y="228" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >test filter · LSP</text>
+<path d="M774 182 H790" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="792" y="122" width="168" height="120" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="792" y="122" width="5" height="120" rx="2.5" fill="#3fb950"/>
+<text x="810" y="152" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Plan</text>
+<text x="810" y="171" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >before / after</text>
+<text x="810" y="190" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >of every file</text>
+<path d="M500 260 V290" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M500 290 L580 336 L500 382 L420 336 z" fill="#1c2330" stroke="#e3a008" stroke-width="1.5"/>
+<text x="500" y="341" font-size="14" fill="#e6edf3" font-weight="600" text-anchor="middle" >Approve?</text>
+<path d="M582 336 H640" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="588.3" y="310.2" width="39.3" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="608.0" y="326.8" font-size="11.5" fill="#3fb950" font-weight="500" text-anchor="middle" >Yes</text>
+<rect x="640" y="282" width="340" height="116" rx="10" fill="#161b22" stroke="#30363d"/>
+<rect x="640" y="282" width="5" height="116" rx="2.5" fill="#3fb950"/>
+<text x="658" y="312" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Writes</text>
+<text x="658" y="331" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >settings.local.json · agents/*.md</text>
+<text x="658" y="350" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >CLAUDE.local.md · hooks/ · .git/info/exclude</text>
+<text x="658" y="369" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >repo-mode.json (state, for /off)</text>
+<path d="M418 336 H360" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="375.6" y="310.2" width="32.9" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
+<text x="392.0" y="326.8" font-size="11.5" fill="#e3a008" font-weight="500" text-anchor="middle" >No</text>
+<rect x="20" y="318" width="340" height="36" rx="18" fill="#1c2330" stroke="#30363d"/><text x="190" y="341" font-size="13.5" fill="#8b949e" font-weight="600" text-anchor="middle" >Nothing is written</text>
+<text x="500" y="410" font-size="12" fill="#8b949e" font-weight="400" text-anchor="middle" font-style="italic">or change your answers → back to Round 1</text>
+</svg>
