@@ -13,7 +13,7 @@ Read-only. Do not create, edit, or delete anything. Talk to the user in the lang
 3. Report in a short table:
    - repo-mode: on (scope, date from the state file) / off / partial (traces without a state file).
    - Main model, advisor, effort level, workflow size, ultracode and default subagent model (`CLAUDE_CODE_SUBAGENT_MODEL`, also used by workflow agents), each with source file. Note that `CLAUDE_CODE_EFFORT_LEVEL` in the shell environment would override `effortLevel`.
-   - Subagents in `.claude/agents/`, their `model` and `effort`, and whether repo-mode manages them.
+   - Subagents in `.claude/agents/`, their `model` and `effort`, and whether repo-mode manages them. A managed `escalate` agent on `fable` is intentional (rarely called, read-only); don't flag it as an expensive subagent.
    - Delegation rules block: present in which file / absent.
    - `permissions.deny` Read rules, and which of them repo-mode added.
    - Code-intelligence plugin recorded by repo-mode, if any.

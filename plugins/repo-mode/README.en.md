@@ -44,6 +44,7 @@ Out of the box, Claude Code runs almost everything on the same model, usually th
 | Full test runs and logs flood the main context. | **test-runner** returns only the failures, verbatim. | The noise stays out; only the summary reaches the main session. |
 | Every `pytest`, `npm test` or `go test` brings its whole output into context, even when everything passes. | Optional **test-output filter** (PreToolUse hook): Claude sees only the failures and the last 20 lines. The exit code stays real and the full output is saved to a temp file. | Fewer tokens on **every** test run, in the main session too. Based on the docs example, improved so the exit code isn't lost. |
 | The session that wrote the code also reviews it. | **audit** reviews the diff independently, without the conversation history and without style comments. | A fresh reviewer hasn't seen the reasoning behind the code, so it isn't swayed by it. |
+| The advisor takes one model, and the hardest problems may need a stronger one. | Optional read-only **escalate** subagent on Fable, plus a rule: call it only after the advisor and two own attempts failed. | The expensive model is used only when stuck, not for every turn. The main session must brief it; it doesn't see the conversation, and each call is billed at Fable prices. |
 | Claude guesses when to delegate, and can keep retrying fixes forever. | Short rules in `CLAUDE.local.md`. Optional: stop a fix loop after two rounds without progress. | Delegation only when it pays. Anthropic estimates multi-agent setups use 3–10× more tokens, so delegating makes sense only for 10+ files, 3+ independent pieces of work, or an independent check. |
 | Vendored or generated code shows up in searches. | Read deny rules, only for tracked folders such as `vendor/` and `dist/`. | Fewer useless files in context. |
 
@@ -59,12 +60,14 @@ flowchart TD
         E["Explore<br/>Haiku · low<br/>→ path:line"]
         T["test-runner<br/>Haiku · low<br/>→ failures only"]
         R["audit<br/>Sonnet · high<br/>→ findings + evidence"]
+        X["escalate<br/>Fable · high<br/>→ diagnosis + next step"]
         G["general-purpose / Plan<br/>Sonnet<br/>→ summary"]
     end
     M -->|"10+ files"| E
     M -->|"tests · logs"| T
     M -->|"before «done»"| R
     M -->|"everything else"| G
+    M -.->|"advisor + 2 tries failed"| X
 ```
 
 Each subagent starts with its own clean context, without CLAUDE.md (`omitClaudeMd: true`) and without the Agent tool, so it can't start subagents of its own. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
@@ -103,6 +106,7 @@ After `setup` or `off`, start a new session in the repo.
 | Advisor | Opus | Fable · Sonnet (not with an Opus main model) · none |
 | Explore / test-runner | Haiku | Sonnet · same as main |
 | audit | Sonnet | Opus · same as main |
+| escalate | Fable | Opus |
 | Other subagents and workflow agents | Sonnet if the main model is Opus, `opusplan` or Fable; otherwise same as main | Haiku |
 | Effort | model default (`medium`) | `high` / `xhigh` for hard work, `low` for routine work |
 | Workflow size | default (`medium`, or `small` on Pro) | `small` to save · `large` / `unrestricted` for big refactors |
@@ -113,7 +117,7 @@ After `setup` or `off`, start a new session in the repo.
 
 **"Only me" scope (default)**: nothing is committed.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (the test filter)
-- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (whichever you pick)
+- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md` (whichever you pick)
 - `.claude/hooks/repo-mode-filter-tests.sh` (Bash) and/or `repo-mode-filter-tests.ps1` (PowerShell): the test-filter script, if you pick it
 - `CLAUDE.local.md`: a block of delegation rules between `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: what changed, so undo is exact

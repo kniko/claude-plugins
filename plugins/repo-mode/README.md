@@ -44,6 +44,7 @@ claude plugin marketplace remove local-tools
 | Τα πλήρη tests και τα logs γεμίζουν το κύριο context. | Ο **test-runner** επιστρέφει μόνο τα failures, αυτολεξεί. | Ο θόρυβος μένει έξω. Στο κύριο session φτάνει μόνο η σύνοψη. |
 | Κάθε `pytest`, `npm test` ή `go test` φέρνει όλη την έξοδο μέσα στο context, ακόμα και όταν όλα περνούν. | Προαιρετικό **φίλτρο εξόδου tests** (PreToolUse hook): το Claude βλέπει μόνο τα failures και τις τελευταίες 20 γραμμές. Το exit code μένει το πραγματικό και η πλήρης έξοδος σώζεται σε προσωρινό αρχείο. | Λιγότερα tokens σε **κάθε** εκτέλεση tests, και στο κύριο session. Βασίζεται στο παράδειγμα των docs, βελτιωμένο ώστε να μη χάνεται το exit code. |
 | Το review το κάνει το ίδιο session που έγραψε τον κώδικα. | Ο **audit** κάνει ανεξάρτητο review του diff, χωρίς το ιστορικό της συζήτησης και χωρίς σχόλια για στυλ. | Ένας «φρέσκος» reviewer δεν έχει δει το σκεπτικό του κώδικα, άρα δεν επηρεάζεται από αυτό. |
+| Ο advisor παίρνει ένα μόνο model και τα δυσκολότερα προβλήματα ίσως θέλουν δυνατότερο. | Προαιρετικός subagent **escalate** (μόνο ανάγνωση) σε Fable, και κανόνας: κάλεσέ τον μόνο αν ο advisor και δύο δικές σου προσπάθειες απέτυχαν. | Το ακριβό model χρησιμοποιείται μόνο όταν κολλήσεις, όχι σε κάθε turn. Το κύριο session πρέπει να τον ενημερώσει· δεν βλέπει τη συζήτηση και κάθε κλήση χρεώνεται σε τιμή Fable. |
 | Το Claude μαντεύει πότε να αναθέσει, και μπορεί να επαναλαμβάνει διορθώσεις χωρίς τέλος. | Σύντομοι κανόνες στο `CLAUDE.local.md`. Προαιρετικά: σταμάτα έναν κύκλο διορθώσεων μετά από δύο γύρους χωρίς πρόοδο. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
 | Vendored ή generated κώδικας μπαίνει στις αναζητήσεις. | Read deny rules μόνο για tracked φακέλους, όπως `vendor/` και `dist/`. | Λιγότερα άχρηστα αρχεία στο context. |
 
@@ -59,12 +60,14 @@ flowchart TD
         E["Explore<br/>Haiku · low<br/>→ path:line"]
         T["test-runner<br/>Haiku · low<br/>→ μόνο τα failures"]
         R["audit<br/>Sonnet · high<br/>→ ευρήματα + αποδείξεις"]
+        X["escalate<br/>Fable · high<br/>→ διάγνωση + επόμενο βήμα"]
         G["general-purpose / Plan<br/>Sonnet<br/>→ σύνοψη"]
     end
     M -->|"10+ αρχεία"| E
     M -->|"tests · logs"| T
     M -->|"πριν το «τέλος»"| R
     M -->|"υπόλοιπα"| G
+    M -.->|"advisor + 2 προσπάθειες απέτυχαν"| X
 ```
 
 Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
@@ -103,6 +106,7 @@ flowchart TD
 | Advisor | Opus | Fable · Sonnet (όχι με κύριο Opus) · κανένας |
 | Explore / test-runner | Haiku | Sonnet · ίδιο με το κύριο |
 | audit | Sonnet | Opus · ίδιο με το κύριο |
+| escalate | Fable | Opus |
 | Υπόλοιποι subagents και workflow agents | Sonnet αν το κύριο είναι Opus, `opusplan` ή Fable. Αλλιώς ίδιο με το κύριο. | Haiku |
 | Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
 | Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
@@ -113,7 +117,7 @@ flowchart TD
 
 **Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (το φίλτρο tests)
-- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (όσα επιλέξεις)
+- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md` (όσα επιλέξεις)
 - `.claude/hooks/repo-mode-filter-tests.sh` (Bash) ή/και `repo-mode-filter-tests.ps1` (PowerShell): το script του φίλτρου tests, αν το επιλέξεις
 - `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo

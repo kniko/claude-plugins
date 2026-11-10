@@ -20,6 +20,7 @@ Fable needs Fable access, and on some plans a one-time consent to bill Fable usa
 | Opus 5.5 | v2.1.280+ |
 | `omitClaudeMd` agent field | v2.1.271+ |
 | Fable 5.1 | v2.1.257+ |
+| Fable 5.2 (`fable` alias on the Anthropic API) | v2.1.321+ |
 | `ultracode` setting | v2.1.284+ |
 | `workflowSizeGuideline` default `small` on Pro | v2.1.271+ |
 
@@ -77,6 +78,13 @@ Other advisor facts:
 - `workflowSizeGuideline`: `unrestricted` | `small` | `medium` | `large`; valid in any settings file. Default `medium`, or `small` on Pro (v2.1.271+). It sets the agent count Claude aims for — advice, not a cap.
 - Limits: 16 concurrent agents by default (`CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS`, 1–256), 1,000 agents per run; a "Large workflow" warning appears above 25 agents or 1.5M projected tokens.
 - Off switches: `"disableWorkflows": true` or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
+
+## escalate agent (v1.5.0)
+
+- The advisor takes exactly one model (`advisorModel`), so there is no built-in "Opus advisor, Fable when it's really hard". repo-mode's substitute: an optional read-only `escalate` subagent on `fable` plus a rule in the delegation block telling the main session to call it only after the advisor and two own attempts failed. The main session decides to call it, so it is not guaranteed.
+- Docs (sub-agents, model-config, checked 2026-11-11): the subagent `model` field accepts `sonnet`, `opus`, `haiku`, `fable`, a full model ID, or `inherit`; `fable` resolves to Fable 5.2 outside gateway sessions (Fable 5 in Claude apps gateway sessions; `ANTHROPIC_DEFAULT_FABLE_MODEL` overrides). Fable 5.2 needs Claude Code v2.1.321+. Subagent `effort` accepts low/medium/high/xhigh/max (levels depend on the model).
+- Not documented: whether a Fable subagent request triggers the Fable usage-credits consent prompt (the docs describe it for the main session only).
+- The subagent has no conversation history, so the briefing must carry everything; `omitClaudeMd: true` keeps the Fable-priced context small.
 
 ## Test-output filter hook
 
