@@ -2,6 +2,12 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-11-11
+
+### Added
+- **`/repo-mode:handoff`**: writes `HANDOFF.md` (goal, state, next steps, decisions, commands, risks) so the next session can start fresh instead of resuming a long conversation, which re-reads the whole history uncached. It writes only that file and never commits it.
+- Optional **secrets Read deny rules** in setup (`.env` files, `~/.ssh`, `secrets/`): a safety option, not a cost one. They stop Claude's file tools and recognized file commands such as `cat`, not scripts that open files themselves.
+
 ## [1.5.0] - 2026-11-11
 
 ### Added
@@ -58,6 +64,7 @@ All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepach
 - `/repo-mode:status` (read-only report) and `/repo-mode:off` (exact undo from `.claude/repo-mode.json`).
 - Personal scope hides all files via `.git/info/exclude`.
 
+[1.6.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.6.0
 [1.5.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.5.0
 [1.4.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.4.0
 [1.3.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.3.0

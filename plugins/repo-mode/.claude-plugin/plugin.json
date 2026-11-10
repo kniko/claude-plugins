@@ -1,6 +1,6 @@
 {
   "name": "repo-mode",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Per-repo model/effort/advisor/subagent setup wizard that routes work to cheaper models: /repo-mode:setup, /repo-mode:status, /repo-mode:off",
   "author": {
     "name": "kniko"

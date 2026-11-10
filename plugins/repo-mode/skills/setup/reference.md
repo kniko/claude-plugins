@@ -137,6 +137,12 @@ Fields used by the templates: `name`, `description`, `model`, `effort`, `tools`,
 
 Format: `"Read(./**/<dir>/**/*)"` for a directory, `"Read(./**/*.generated.*)"` for a file pattern, inside `permissions.deny`. Gitignored paths are already excluded from Claude's searches, so only propose rules for paths that are **tracked** in git (vendored SDKs, committed generated code, committed build output, minified bundles).
 
+Secrets rules (v1.6.0, optional, safety not cost): `Read(./.env)`, `Read(./.env.*)` (both are the docs' own example), `Read(~/.ssh/**)` (`~/` = home), `Read(./secrets/**)`. Docs (permissions, checked 2026-11-11): Read/Edit rules use gitignore syntax; `//path` is absolute, `~/path` home, `/path` relative to the settings source, `path` or `./path` relative to the current directory. Read denies apply to the built-in file tools and to file commands Claude Code recognizes in Bash (`cat`, `head`, `tail`, `sed`, `tee`, redirections), not to scripts that open files themselves or `grep -r` without a file name; the docs point to the sandbox for OS-level enforcement. Grep/Glob: best effort. The docs don't say whether Read denies apply inside subagents. Whether `./.env` also matches `sub/.env` is not stated (bare `.env` matches at any depth). A `.claudeignore` file has no effect.
+
+## Handoff (v1.6.0)
+
+`/repo-mode:handoff` writes `HANDOFF.md` (goal, state, next steps, decisions, commands, risks; about 40 lines) so the next session can start fresh. Why it saves tokens: a `--continue`/`--resume` re-reads the whole conversation on its first message without the cache, while a new session with a short handoff starts small. It writes only that one file, never commits it, and is not recorded in the state file, so `/repo-mode:off` doesn't touch it.
+
 ## Code intelligence (LSP) plugins
 
 Anthropic's official marketplace (`claude-plugins-official`) has code intelligence plugins for TypeScript, Python, Go, Rust and other common languages; `typescript-lsp@claude-plugins-official` is the documented TypeScript one. Each needs the language server binary installed on the machine. Do not guess plugin names for other languages: tell the user to open `/plugin` → Discover, search for the language, and install it with "Install for you, in this repo only".
