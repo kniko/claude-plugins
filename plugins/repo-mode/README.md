@@ -107,14 +107,14 @@ flowchart TD
 | Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
 | Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
 | Κανόνες ανάθεσης | Ναι | Ναι + σταμάτημα κύκλων διορθώσεων · Όχι |
-| Φίλτρο εξόδου tests | Ναι (θέλει `bash` και `jq`) | Όχι |
+| Φίλτρο εξόδου tests | Ναι: Bash tool (θέλει `bash` και `jq`), PowerShell tool (θέλει `pwsh` ή Windows PowerShell) ή και τα δύο | Όχι |
 
 ## Τι γράφει σε κάθε repo
 
 **Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (το φίλτρο tests)
 - `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (όσα επιλέξεις)
-- `.claude/hooks/repo-mode-filter-tests.sh`: το script του φίλτρου tests, αν το επιλέξεις
+- `.claude/hooks/repo-mode-filter-tests.sh` (Bash) ή/και `repo-mode-filter-tests.ps1` (PowerShell): το script του φίλτρου tests, αν το επιλέξεις
 - `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo
 - `.git/info/exclude`: όλα τα παραπάνω, ώστε να μη φαίνονται στο `git status` (το `.gitignore` του repo δεν αλλάζει)
@@ -124,7 +124,7 @@ flowchart TD
 ## Σημειώσεις
 
 - **Ultracode:** το repo-mode δεν το ενεργοποιεί ποτέ. Με το ultracode, το Claude γράφει workflow για κάθε σημαντική δουλειά, με effort `xhigh`, και τα docs λένε ότι κάθε αίτημα καίει περισσότερα tokens και αργεί. Άνοιξέ το μόνο για μια μεγάλη δουλειά, με `/effort ultracode`, και κλείσ' το με `/effort ultracode off`. Οι workflow agents που δεν έχουν δικό τους model παίρνουν τότε αυτό που όρισε το repo-mode.
-- **Φίλτρο tests:** πιάνει μόνο απλές εντολές tests, χωρίς `;`, `|`, `&&` κ.λπ. Όλες οι άλλες εντολές περνούν όπως είναι. Χωρίς `jq` δεν κάνει τίποτα. Η εντολή που τρέχει τελικά είναι η «τυλιγμένη», οπότε ένας κανόνας άδειας όπως `Bash(pytest *)` δεν ταιριάζει πια και το Claude μπορεί να ζητήσει έγκριση. Στα native Windows δεν έχει δοκιμαστεί. Το `/hooks` δείχνει αν είναι ενεργό.
+- **Φίλτρο tests:** πιάνει μόνο απλές εντολές tests, χωρίς `;`, `|`, `&&` κ.λπ. Όλες οι άλλες εντολές περνούν όπως είναι. Χωρίς `jq` (Bash) ή `pwsh`/`powershell.exe` (PowerShell) δεν κάνει τίποτα. Η εντολή που τρέχει τελικά είναι η «τυλιγμένη», οπότε ένας κανόνας άδειας όπως `Bash(pytest *)` δεν ταιριάζει πια και το Claude μπορεί να ζητήσει έγκριση. Η έκδοση PowerShell είναι για το ξεχωριστό PowerShell tool (preview στα docs· σε WSL/Linux/macOS θέλει `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`). Δοκιμάστηκε με `pwsh` 7 και Windows PowerShell 5.1, όχι ακόμα σε live session σε Windows. Το `/hooks` δείχνει αν είναι ενεργό.
 - Ο advisor είναι experimental και δουλεύει μόνο μέσω Anthropic API, όχι Bedrock, Vertex ή Foundry. Δεν λειτουργεί αν έχει οριστεί `DISABLE_TELEMETRY`. Κάθε κλήση του ξαναδιαβάζει όλη τη συζήτηση, χωρίς cache, με τις τιμές του advisor model. Αξίζει σε μεγάλες δουλειές πολλών βημάτων, όχι σε μικρές.
 - Μην αλλάζεις advisor από τον picker του `/advisor`: σώζει στις global ρυθμίσεις και ισχύει σε όλα τα repos.
 - Ο `audit` κάνει παρόμοια δουλειά με το ενσωματωμένο `/code-review`. Ο `audit` τρέχει αυτόματα πριν το «τελείωσα», ενώ το `/code-review` το τρέχεις όποτε θες.

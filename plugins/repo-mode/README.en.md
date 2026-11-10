@@ -107,14 +107,14 @@ After `setup` or `off`, start a new session in the repo.
 | Effort | model default (`medium`) | `high` / `xhigh` for hard work, `low` for routine work |
 | Workflow size | default (`medium`, or `small` on Pro) | `small` to save · `large` / `unrestricted` for big refactors |
 | Delegation rules | Yes | Yes + stop fix loops · No |
-| Test-output filter | Yes (needs `bash` and `jq`) | No |
+| Test-output filter | Yes: Bash tool (needs `bash` and `jq`), PowerShell tool (needs `pwsh` or Windows PowerShell), or both | No |
 
 ## What it writes in each repo
 
 **"Only me" scope (default)**: nothing is committed.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (the test filter)
 - `.claude/agents/Explore.md`, `test-runner.md`, `audit.md` (whichever you pick)
-- `.claude/hooks/repo-mode-filter-tests.sh`: the test-filter script, if you pick it
+- `.claude/hooks/repo-mode-filter-tests.sh` (Bash) and/or `repo-mode-filter-tests.ps1` (PowerShell): the test-filter script, if you pick it
 - `CLAUDE.local.md`: a block of delegation rules between `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: what changed, so undo is exact
 - `.git/info/exclude`: all of the above, so they don't show in `git status` (the repo's `.gitignore` is untouched)
@@ -124,7 +124,7 @@ After `setup` or `off`, start a new session in the repo.
 ## Notes
 
 - **Ultracode:** repo-mode never turns it on. With ultracode, Claude writes a workflow for every substantive task at `xhigh` effort, and the docs say each request uses more tokens and takes longer. Turn it on only for a big task with `/effort ultracode`, and off again with `/effort ultracode off`. Workflow agents without a model of their own then use the one repo-mode set.
-- **Test filter:** it only catches plain test commands, with no `;`, `|`, `&&` etc. Every other command passes through unchanged. Without `jq` it does nothing. The command that actually runs is the wrapped one, so an allow rule like `Bash(pytest *)` no longer matches and Claude may ask for approval. Untested on native Windows. `/hooks` shows whether it's active.
+- **Test filter:** it only catches plain test commands, with no `;`, `|`, `&&` etc. Every other command passes through unchanged. Without `jq` (Bash variant) or `pwsh`/`powershell.exe` (PowerShell variant) it does nothing. The command that actually runs is the wrapped one, so an allow rule like `Bash(pytest *)` no longer matches and Claude may ask for approval. The PowerShell variant is for the separate PowerShell tool (a preview in the docs; opt-in on WSL/Linux/macOS with `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`). It was tested with `pwsh` 7 and Windows PowerShell 5.1, not yet in a live Windows session. `/hooks` shows whether it's active.
 - The advisor is experimental and works only through the Anthropic API, not Bedrock, Vertex or Foundry. It doesn't work if `DISABLE_TELEMETRY` is set. Each call re-reads the whole conversation, uncached, at the advisor model's rates. It pays off on long multi-step work, not on short tasks.
 - Don't change the advisor from the `/advisor` picker: it saves to your global settings and applies to every repo.
 - `audit` does similar work to the built-in `/code-review`. `audit` runs automatically before "done"; `/code-review` runs whenever you call it.

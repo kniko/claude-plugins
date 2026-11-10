@@ -2,6 +2,15 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-11-10
+
+### Added
+- **PowerShell variant of the test-output filter** (`.claude/hooks/repo-mode-filter-tests.ps1`) for the separate PowerShell tool: same rules as the Bash one (plain test commands only, ≤ 60 lines shown in full, otherwise failure context + last 20 lines, real exit code kept, full output saved to a temp file). Works with PowerShell 7 and Windows PowerShell 5.1; no `jq` needed. The setup question now offers Bash, PowerShell, both, or none.
+- Setup registers the PowerShell hook with `"shell": "powershell"` on native Windows and with `pwsh -NoProfile -File` elsewhere; `/repo-mode:off` and `/repo-mode:status` handle both variants.
+
+### Changed
+- The setup wizard now always talks in English.
+
 ## [1.3.0] - 2026-11-09
 
 ### Added
@@ -43,6 +52,7 @@ All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepach
 - `/repo-mode:status` (read-only report) and `/repo-mode:off` (exact undo from `.claude/repo-mode.json`).
 - Personal scope hides all files via `.git/info/exclude`.
 
+[1.4.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.4.0
 [1.3.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.3.0
 [1.2.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.2.0
 [1.1.0]: https://github.com/kniko/claude-plugins/releases/tag/repo-mode-v1.1.0

@@ -28,7 +28,7 @@ Ground rules:
    - Keep every other key untouched.
    - If `settingsFileCreatedBySetup` is true and the file would end up as `{}`, plan to delete it.
    - Show the full JSON before and after.
-   - For each entry in `hooksAdded`: remove from `hooks.<event>` the group whose matcher and command match it exactly; leave every other hook. If `hooks.<event>` ends up empty, remove it; if `hooks` ends up empty, remove it.
+   - For each entry in `hooksAdded`: remove from `hooks.<event>` the group whose matcher, command and `shell` (if recorded) match it exactly; leave every other hook. If `hooks.<event>` ends up empty, remove it; if `hooks` ends up empty, remove it.
 2. **Hook scripts** in `hookScriptsCreated`: plan to delete each one that still contains `# managed by repo-mode`; otherwise list it separately and ask. Remove `.claude/hooks/` only if it ends up empty and setup created it.
 3. **Agent files** in `agentsCreated`: plan to delete each one that still contains `<!-- managed by repo-mode -->`. If one no longer has the marker, or is missing, list it separately and ask.
 4. **Rules block**: remove everything from `<!-- repo-mode:start -->` to `<!-- repo-mode:end -->` inclusive in `rulesFile`. If `rulesFileCreatedBySetup` is true and nothing but whitespace remains, plan to delete the file. Show the before/after of that file.
