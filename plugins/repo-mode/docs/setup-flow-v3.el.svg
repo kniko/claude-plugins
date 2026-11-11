@@ -24,6 +24,6 @@
 <path d="M416 346 H360" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
 <text x="390" y="338" font-size="10.5" fill="#8fb0e0" font-weight="700" text-anchor="middle">όχι</text>
 <rect x="20" y="328" width="340" height="36" fill="#0b1f3f" stroke="#8fb0e0" stroke-width="1.2" stroke-dasharray="3 3"/><text x="190" y="351" font-size="13" fill="#8fb0e0" font-weight="700" text-anchor="middle">Δεν γράφεται τίποτα</text>
-<text x="500" y="428" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="middle">ή άλλαξε απαντήσεις → πίσω στον Γύρο 1</text>
-<text x="982" y="446" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="end">github.com/kniko/claude-plugins</text>
+<text x="34" y="436" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="start">ή άλλαξε απαντήσεις → πίσω στον Γύρο 1</text>
+<text x="982" y="426" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="end">claude plugin marketplace add kniko/claude-plugins</text><text x="982" y="444" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="end">claude plugin install repo-mode@kniko-tools</text>
 </svg>
