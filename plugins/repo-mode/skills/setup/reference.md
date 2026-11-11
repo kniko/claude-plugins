@@ -1,14 +1,14 @@
 # repo-mode reference
 
-Facts below come from the Claude Code docs (code.claude.com/docs) and the Claude pricing page, checked 2026-11-08 (workflows: 2026-11-09). If something here conflicts with what you observe in the user's Claude Code, trust the observation and tell the user.
+Facts below come from the Claude Code docs (code.claude.com/docs) and the Claude pricing page, checked 2026-11-08 (workflows: 2026-11-09; Fable versions, advisor pairing table, hooks inside subagents: 2026-11-11). If something here conflicts with what you observe in the user's Claude Code, trust the observation and tell the user.
 
 ## Model aliases
 
-`sonnet`, `opus`, `haiku`, `fable` resolve to Claude Code's current default version of each family. On the Anthropic API today: `opus` = Opus 5.5, `sonnet` = Sonnet 5.5, `haiku` = Haiku 5.5, `fable` = Fable 5.1. On Bedrock / Vertex (Agent Platform) / Foundry / Claude Platform on AWS, `haiku` resolves to Haiku 4.5. A full model ID such as `claude-opus-5-5` is also accepted.
+`sonnet`, `opus`, `haiku`, `fable` resolve to Claude Code's current default version of each family. On the Anthropic API today: `opus` = Opus 5.5, `sonnet` = Sonnet 5.5, `haiku` = Haiku 5.5, `fable` = Fable 5.2 (Claude Code v2.1.321+; Fable 5 in Claude apps gateway sessions; `ANTHROPIC_DEFAULT_FABLE_MODEL` overrides). On Bedrock / Vertex (Agent Platform) / Foundry / Claude Platform on AWS, `haiku` resolves to Haiku 4.5. A full model ID such as `claude-opus-5-5` is also accepted.
 
-`opusplan` uses `opus` while in plan mode and `sonnet` for execution. `best` = Fable where available, otherwise Opus.
+`opusplan` uses `opus` while in plan mode and `sonnet` for execution. `best` uses the same model as `opus`.
 
-Fable needs Fable access, and on some plans a one-time consent to bill Fable usage to usage credits (the user accepts it by running `/model fable` once).
+Fable needs Fable access, and on some plans a one-time consent to bill Fable usage to usage credits (the user accepts it by running `/model fable` once; that command also saves Fable as the global default, so switch back afterwards with `/model <usual model>`).
 
 ## Version floors
 
@@ -33,11 +33,17 @@ The advisor must rank at or above the main model; otherwise Claude Code does not
 | Main model | Accepted advisors |
 |---|---|
 | Haiku 4.5 | fable, opus, sonnet, haiku 5.5 |
+| Sonnet 4.6 | fable, opus, sonnet, haiku 5.5 |
+| Opus 4.6 | fable, opus, sonnet (5 or later), haiku 5.5 |
 | Sonnet 5 or Haiku 5.5 | fable, opus (4.7 or later), sonnet (5 or later), haiku 5.5 |
+| Opus 4.7 or 4.8 | fable, opus (4.7 or later), sonnet 5.5 |
 | Sonnet 5.5 | fable, opus (5 or later), sonnet (5.5) |
 | Opus 5 / 5.5 (and `opusplan`) | fable, opus (5 or later) — **not** sonnet |
-| Fable 5 | fable 5.1 or fable 5 |
-| Fable 5.1 | fable 5.1 only |
+| Fable 5 | fable 5.2, 5.1 or 5 |
+| Fable 5.1 | fable 5.2 or 5.1 |
+| Fable 5.2 | fable 5.2 only |
+
+With the aliases repo-mode writes, a `fable` main model takes only a `fable` advisor.
 
 Common pairings in the docs: Sonnet main + Opus advisor; Haiku main + Opus advisor ("lowest-cost main model with strong planning").
 
@@ -46,7 +52,7 @@ Other advisor facts:
 - Stays off when feature-flag fetching is disabled, e.g. `DISABLE_TELEMETRY` is set, or when `CLAUDE_CODE_DISABLE_ADVISOR_TOOL=1`.
 - Off switches: removing the `advisorModel` key, the `/advisor off` command, or `CLAUDE_CODE_DISABLE_ADVISOR_TOOL=1`. `"off"` / `null` are not documented settings values — never write them.
 - `/advisor <model>` saves to the user's global settings (`~/.claude/settings.json`), so it would apply to every repo. Never use it from this skill; write the repo settings file instead.
-- Subagents inherit the advisor and apply the same pairing check against their own model.
+- Subagents inherit the advisor and apply the same pairing check against their own model. So a Haiku 5.5 helper agent can consult an Opus advisor, billed at the advisor's rates on that subagent's conversation. No per-subagent off switch is documented; `/usage` shows whether it happens. Not measured by repo-mode.
 - The main model decides when to consult: typically before committing to an approach, when an error keeps recurring, and before declaring done. There is no setting to cap calls in Claude Code.
 - Each advisor call re-reads the whole conversation, uncached, at the advisor model's rates. Toggling the advisor does not invalidate the main model's cache.
 - Best fit: long, multi-step tasks where most turns are routine but plan quality decides the outcome. Little value on short tasks.
@@ -94,6 +100,8 @@ Other advisor facts:
 - Registered in the settings file as `hooks.PreToolUse` → `{"matcher": "Bash", "hooks": [{"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/repo-mode-filter-tests.sh"}]}`. Hooks are valid in `.claude/settings.local.json`.
 - It returns no `permissionDecision`, like the docs example, so the rewritten command goes through the normal permission check: an allow rule such as `Bash(pytest *)` won't match the wrapped command. It does not affect commands started with the Monitor tool. It needs `bash` and `jq`; on native Windows it is unverified.
 - **PowerShell variant** (`templates/hooks/repo-mode-filter-tests.ps1`, v1.4.0; tested with `pwsh` 7.6 and Windows PowerShell 5.1): same rules, for the separate `PowerShell` tool. The docs: matcher `Bash|PowerShell` covers shell commands; PowerShell hook input has `tool_input.command` like Bash; `updatedInput` is described generically (not excluded for PowerShell, not stated explicitly). One file, two modes: with no arguments it is the hook (stdin JSON → stdout JSON) and rewrites the command into `& '<script>' -RunCommand '<command>'`; with `-RunCommand` it runs the test command (stderr merged), filters, and exits with the command's exit code. Registration: on native Windows `{"matcher": "PowerShell", "hooks": [{"type": "command", "shell": "powershell", "command": "& \"$env:CLAUDE_PROJECT_DIR/.claude/hooks/repo-mode-filter-tests.ps1\""}]}`; elsewhere `pwsh -NoProfile -File "$CLAUDE_PROJECT_DIR/.claude/hooks/repo-mode-filter-tests.ps1"` with the default shell (the docs describe `shell` for Windows only). The PowerShell tool is automatic on Windows without Git Bash, default-on with Git Bash for claude.ai/Console accounts, opt-in on WSL/Linux/macOS (`pwsh` 7+, `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`); the docs call it a preview. Not verified in a live Claude Code session: that Claude Code accepts the rewritten PowerShell command exactly as it does for Bash, and the hook `shell` field on WSL. State file: a `hooksAdded` entry carries `"shell"` when the group has one.
+- Hooks from settings files also run inside subagents (hooks docs: tool events "fire the same configured hooks as in the main conversation", with `agent_id` and `agent_type` in the input). So `test-runner` and `escalate` see filtered output too; their templates tell them to read the saved full-output file before reporting.
+- Failure pattern (both variants): `FAIL|ERROR|Error|error:|Traceback|panic:|AssertionError|panicked|Failed asserting`. The last two were added in v1.7.0 after testing against `cargo test` and PHPUnit layouts, where the details of failures in the middle of the output were dropped.
 - Verify with `/hooks` (listed under PreToolUse) or `claude --debug-file ./claude-debug.txt` (a `modified tool input keys` line when it rewrites a command).
 
 ## Delegation guidance (Anthropic blog and best-practices)
@@ -117,6 +125,8 @@ Precedence (highest first): managed > command line > `.claude/settings.local.jso
 `model`, `effortLevel`, `workflowSizeGuideline` and `env` are read at session start; a change needs a new session. `advisorModel`, `model`, `effortLevel`, `workflowSizeGuideline`, `env` and `permissions.deny` are valid in all three files. In the shared project file, most `env` values apply only after each teammate trusts the folder.
 
 Settings files are strict JSON: no comments, no trailing commas.
+
+`/model <name>` inside a session switches that session and also saves the model as the user's global default (`~/.claude/settings.json`), exactly like the `/advisor` picker; the repo file still wins in this repo at the next session start. Observed once on v2.1.321, not found in the docs read: a resumed session (`--continue` / `--resume`) kept the model it had instead of re-reading `model` from settings, so a fresh session is the reliable way to pick up a changed model.
 
 ## Subagent files
 
@@ -149,7 +159,22 @@ Anthropic's official marketplace (`claude-plugins-official`) has code intelligen
 
 ## Git-local ignore
 
-`.git/info/exclude` uses `.gitignore` syntax but is never committed. Use it for personal-mode files so the repo's own `.gitignore` is untouched. Add exact file paths, one per line, under a `# repo-mode` comment line.
+`.git/info/exclude` uses `.gitignore` syntax but is never committed. Use it for personal-mode files so the repo's own `.gitignore` is untouched. Always take its path from `git rev-parse --git-path info/exclude`: in a git worktree `.git` is a file, and the exclude file lives in the main repository's git directory. Personal-scope files are untracked, so git itself does not carry them into a new worktree. Add exact file paths, one per line, under a `# repo-mode` comment line.
+
+## Re-running setup
+
+When `.claude/repo-mode.json` already exists, the earlier state is the baseline and the run is an update:
+
+- **`previousSettings`**: for each key, if the earlier state's `settings.<key>` is non-`null` (setup wrote it), keep the earlier `previousSettings.<key>`. Capture from the current file only for keys setup had not written before. Recapturing would record repo-mode's own values as "previous" and `/repo-mode:off` would restore the wrong thing.
+- **A key setup wrote before that the user now leaves at its default / "no change"**: restore the earlier previous value (remove the key if it was `null`) and record `settings.<key>: null`. Advisor = None is the exception: the user asked for no advisor in this file, so remove the key and record it as "State file" describes (`false` if there is an earlier value to put back, else `null`); never write the earlier advisor back during setup.
+- **`settingsFileCreatedBySetup`, `rulesFileCreatedBySetup`**: keep `true` if the earlier state says `true`; the file exists now only because setup created it.
+- **No longer chosen**: an agent in `agentsCreated` → delete its file if it still has the `<!-- managed by repo-mode -->` line, otherwise ask; a group in `hooksAdded` → remove it from the settings file, and delete its script from `hookScriptsCreated` if it still has `# managed by repo-mode`; a rule in `denyRulesAdded` → remove it from `permissions.deny`; rules block answered "No", or no helper agent selected any more (the Rules question is then skipped) → remove the block (and the file, if setup created it and nothing else is left); exclude lines of deleted files → remove.
+- **The new state file lists everything repo-mode manages after this run**, not only what this run added: unchanged items stay in the lists, removed items leave them.
+- Every removal appears in the step-5 plan, deletions listed separately, and nothing happens before approval.
+- **Deny rules**: a rule already in `denyRulesAdded` is repo-mode's own. Offer it again marked "(currently on)"; it is removed only if the user unselects it.
+- **Hook groups**: never add a group that is already there; one group per variant.
+- **Exclude file**: one `# repo-mode` header. Lines from the earlier run stay in the file and in `excludeLinesAdded` even though `git check-ignore` now reports them as ignored. The exclude file is shared by all worktrees of the repository, so these lines apply in every worktree; `/repo-mode:off` asks before removing them when the repository has more than one worktree.
+- **Scope change** (personal ↔ team): not done in a re-run. After Round 1, if the Scope answer differs from the state's `scope`, stop and tell the user to run `/repo-mode:off`, then setup again.
 
 ## State file
 
@@ -176,4 +201,4 @@ Anthropic's official marketplace (`claude-plugins-official`) has code intelligen
 }
 ```
 
-In `settings`, `null` means setup did not set that key. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat any missing key as `null` and any missing list (`hooksAdded`, `hookScriptsCreated`) as empty.
+In `settings`, `null` means setup did not touch that key. `false` means setup **removed** the key (today only `advisorModel`, with Advisor = None): record `false` when `previousSettings` for that key is non-`null`, i.e. there is a value to put back, both on a first run that removes the user's own advisor and on a re-run that drops an advisor setup wrote earlier; if there is nothing to put back, record `null`. `previousSettings` holds the values that were there before setup (`null` = key was absent), so `off` can restore them instead of just deleting. `env.CLAUDE_CODE_SUBAGENT_MODEL` stands for that one entry inside the `env` object; other `env` entries are never touched. A version-1 state file has only `model` and `advisorModel`; treat any missing key as `null` and any missing list (`hooksAdded`, `hookScriptsCreated`) as empty.

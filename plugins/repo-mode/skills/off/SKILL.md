@@ -9,19 +9,21 @@ disable-model-invocation: true
 Undo exactly what `/repo-mode:setup` recorded in `.claude/repo-mode.json` — nothing else.
 
 Ground rules:
-- Talk to the user in the language they use (default: Greek).
+- Talk to the user in the language they use.
+- **Git exclude file:** wherever this skill says `.git/info/exclude`, use the path printed by `git rev-parse --git-path info/exclude`. In a normal clone that is `.git/info/exclude`; in a git worktree `.git` is a file and the real path is elsewhere.
 - **Change, delete, or overwrite nothing until the user approves the plan.** Before that, only read.
 - Never touch `~/.claude/settings.json`, and never run `/advisor` or `/model`.
 - If a file was changed by hand since setup, don't silently discard those changes: show the difference and ask.
 
 ## Step 1 — Read the state
 
-1. Read `.claude/repo-mode.json` at the repository root. If it doesn't exist, say repo-mode isn't set up here (or was set up by hand), show any repo-mode traces you can find — agent files containing `<!-- managed by repo-mode -->`, a `<!-- repo-mode:start -->` block in `CLAUDE.md` / `CLAUDE.local.md`, a `# repo-mode` section in `.git/info/exclude`, `.claude/hooks/repo-mode-filter-tests.sh` and its PreToolUse entry — and ask whether to remove those. Stop if the user says no.
+1. Read `.claude/repo-mode.json` at the repository root. If it doesn't exist, say repo-mode isn't set up here (or was set up by hand), show any repo-mode traces you can find — agent files containing `<!-- managed by repo-mode -->`, a `<!-- repo-mode:start -->` block in `CLAUDE.md` / `CLAUDE.local.md`, a `# repo-mode` section in `.git/info/exclude`, `.claude/hooks/repo-mode-filter-tests.sh` / `repo-mode-filter-tests.ps1` and their PreToolUse entries — and ask whether to remove those. Stop if the user says no.
 2. Read the current settings file named in the state, each file in `agentsCreated` and `hookScriptsCreated`, the `rulesFile`, and `.git/info/exclude`.
 
 ## Step 2 — Build the plan (no changes yet)
 
-1. **Settings file**: for each key in the state's `settings` that setup set (non-`null`): `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, and `env.CLAUDE_CODE_SUBAGENT_MODEL` (the one entry inside `env`; a version-1 state file only has the first two):
+1. **Settings file**: for each key in the state's `settings` that setup set or removed (non-`null`): `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, and `env.CLAUDE_CODE_SUBAGENT_MODEL` (the one entry inside `env`; a version-1 state file only has the first two):
+   - A key recorded as `false` was removed by setup: if it is still absent, restore `previousSettings`; if it has a value now (added by hand since), show it and ask.
    - If the current value still equals what setup wrote: restore `previousSettings` (remove the key if the previous value is `null`). If `env` ends up empty, remove it; never touch other `env` entries.
    - If the current value differs (changed by hand after setup): show it and ask whether to keep it or restore the previous value.
    - Remove each entry in `denyRulesAdded` from `permissions.deny`. If `permissions.deny` ends up empty, remove it; if `permissions` ends up empty, remove it.
@@ -32,7 +34,7 @@ Ground rules:
 2. **Hook scripts** in `hookScriptsCreated`: plan to delete each one that still contains `# managed by repo-mode`; otherwise list it separately and ask. Remove `.claude/hooks/` only if it ends up empty and setup created it.
 3. **Agent files** in `agentsCreated`: plan to delete each one that still contains `<!-- managed by repo-mode -->`. If one no longer has the marker, or is missing, list it separately and ask.
 4. **Rules block**: remove everything from `<!-- repo-mode:start -->` to `<!-- repo-mode:end -->` inclusive in `rulesFile`. If `rulesFileCreatedBySetup` is true and nothing but whitespace remains, plan to delete the file. Show the before/after of that file.
-5. **Git exclude**: remove the lines in `excludeLinesAdded` and the `# repo-mode` header line from `.git/info/exclude`. Leave all other lines.
+5. **Git exclude**: remove the lines in `excludeLinesAdded` and the `# repo-mode` header line from `.git/info/exclude`. Leave all other lines. The exclude file is shared by every worktree of the repository: if `git worktree list` shows more than one worktree, say that removing these lines also un-hides repo-mode files in the other worktrees, and ask whether to remove them or leave them.
 6. **Code intelligence plugin**: if `lspPlugin` is set, offer `claude plugin disable <plugin> --scope local` (or uninstall) — as a separate yes/no, since the user may want to keep it.
 7. **State file**: delete `.claude/repo-mode.json`.
 8. If `.claude/agents/` (or `.claude/`) would be left empty, plan to remove the empty folder only if setup created it; otherwise leave it.

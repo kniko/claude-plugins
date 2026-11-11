@@ -26,7 +26,7 @@ if [[ ! "$cmd" =~ $pattern ]]; then
 fi
 
 awk_prog='{ if (NR<=60) a[NR]=$0; t[NR%20]=$0 }
-/FAIL|ERROR|Error|error:|Traceback|panic:|AssertionError/ { k=6 }
+/FAIL|ERROR|Error|error:|Traceback|panic:|AssertionError|panicked|Failed asserting/ { k=6 }
 k>0 { if (c<100) m[++c]=$0; k-- }
 END {
   if (NR<=60) { for (i=1;i<=NR;i++) print a[i]; exit }
