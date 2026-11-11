@@ -57,20 +57,20 @@ def svg(w, h, title, desc, body):
             f'<title id="t">{escape(title)}</title><desc id="d">{escape(desc)}</desc>\n'
             f'<defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="{GRID}" stroke-width="0.6"/></pattern>'
             f'<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{LINE}" stroke-width="1.5"/></marker>'
-            f'<marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#ff7eb6" stroke-width="1.5"/></marker></defs>\n'
+            +"".join(f'<marker id="m-{k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{v[0]}" stroke-width="1.5"/></marker>' for k, v in MODEL.items())+'</defs>\n'
             f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n{body}\n</svg>\n')
 
 
 STR = {
     "en": dict(
-        you="YOU", main="main session", main_l=["effort medium", "talks, edits code"], adv="advisor", adv_l=["reads the whole chat", "→ plan / correction"],
-        decision="at decisions", cards=[
-            ("Explore", "Haiku", ["→ path:line"], "10+ files"),
-            ("test-runner", "Haiku", ["→ failures only"], "tests · logs"),
-            ("audit", "Sonnet", ["→ findings + evidence"], "before «done»"),
-            ("general-purpose", "Sonnet", ["→ summary", "also runs Plan"], "everything else"),
-            ("escalate", "Fable", ["→ diagnosis +", "   next step"], ["advisor + 2 tries", "failed"])],
-        caption="subagents: own context, only a summary returns", rank="model rank",
+        you="YOU", main="main session", main_l=["effort medium", "keeps only the results"], adv="advisor", adv_l=["reads the whole chat"],
+        ask="consults", advice="advice", inside="stays inside:", cards=[
+            ("Explore", "Haiku", "reads many files", ["path:line"], "10+ files"),
+            ("test-runner", "Haiku", "runs the full suite", ["failures only"], "tests · logs"),
+            ("audit", "Sonnet", "reads the diff", ["findings +", "evidence"], "before «done»"),
+            ("general-purpose", "Sonnet", "any task · also Plan", ["summary"], "everything else"),
+            ("escalate", "Fable", "reads, reproduces", ["diagnosis +", "next step"], ["advisor + 2 tries", "failed"])],
+        caption="each subagent has its own context: the long output stays inside, only the result comes back up", rank="model rank",
         legend="dashed = only after the advisor and two of its own tries failed",
         wt="How the work is split", wd="The main session delegates to subagents with their own context, consults the advisor at decision points, and calls escalate only after the advisor and two tries failed.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · questions and reads only",
@@ -82,14 +82,14 @@ STR = {
                    back="or change your answers → back to Round 1",
                    title="How the setup is created", desc="The wizard asks and reads only, shows a before/after plan, and writes files only after you approve.")),
     "el": dict(
-        you="ΕΣΥ", main="κύριο session", main_l=["effort medium", "μιλάει, γράφει κώδικα"], adv="advisor", adv_l=["βλέπει όλη τη συζήτηση", "→ σχέδιο / διόρθωση"],
-        decision="στις αποφάσεις", cards=[
-            ("Explore", "Haiku", ["→ path:line"], "10+ αρχεία"),
-            ("test-runner", "Haiku", ["→ μόνο failures"], "tests · logs"),
-            ("audit", "Sonnet", ["→ ευρήματα +", "   αποδείξεις"], "πριν το «τέλος»"),
-            ("general-purpose", "Sonnet", ["→ περίληψη", "τρέχει και το Plan"], "υπόλοιπα"),
-            ("escalate", "Fable", ["→ διάγνωση +", "   επόμενο βήμα"], ["advisor + 2 προσπάθειες", "απέτυχαν"])],
-        caption="subagents: δικό τους context, επιστρέφουν μόνο περίληψη", rank="βαθμίδα μοντέλου",
+        you="ΕΣΥ", main="κύριο session", main_l=["effort medium", "κρατά μόνο τα αποτελέσματα"], adv="advisor", adv_l=["βλέπει όλη τη συζήτηση"],
+        ask="ρωτά", advice="συμβουλή", inside="μένει μέσα:", cards=[
+            ("Explore", "Haiku", "σαρώνει αρχεία", ["path:line"], "10+ αρχεία"),
+            ("test-runner", "Haiku", "τρέχει όλο το suite", ["μόνο failures"], "tests · logs"),
+            ("audit", "Sonnet", "διαβάζει το diff", ["ευρήματα +", "αποδείξεις"], "πριν το «τέλος»"),
+            ("general-purpose", "Sonnet", "κάθε δουλειά · Plan", ["περίληψη"], "υπόλοιπα"),
+            ("escalate", "Fable", "αναπαράγει το σφάλμα", ["διάγνωση +", "επόμενο βήμα"], ["advisor + 2 προσπάθειες", "απέτυχαν"])],
+        caption="κάθε subagent έχει δικό του context: το μεγάλο output μένει μέσα, επιστρέφει μόνο το αποτέλεσμα", rank="βαθμίδα μοντέλου",
         legend="διακεκομμένο = μόνο αν απέτυχαν ο advisor και δύο δικές του προσπάθειες",
         wt="Πώς μοιράζεται η δουλειά", wd="Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · μόνο ερωτήσεις και ανάγνωση",
@@ -109,26 +109,35 @@ def work_split(lang):
     b.append(arrow("M500 54 V84"))
     b.append(box(340, 84, 320, 106, s["main"], "Sonnet 5.5", s["main_l"], title_size=16))
     b.append(box(770, 84, 200, 106, s["adv"], "Opus 5.5", s["adv_l"], title_size=16))
-    b.append(arrow("M660 137 H770", dashed=True, both=True))
-    b.append(t(715, 127, s["decision"], 10.5, MU, 400, "middle"))
+    b.append(arrow("M660 118 H770")); b.append(t(715, 110, s["ask"], 10.5, MU, 400, "middle"))
+    b.append(arrow("M770 156 H660", dashed=True)); b.append(t(715, 172, s["advice"], 10.5, MU, 400, "middle"))
     cw, gap, x0 = 172, 15, 40
     cx = [x0 + i * (cw + gap) + cw / 2 for i in range(5)]
-    b.append(f'<path d="M500 190 V222 M{cx[0]} 222 H{cx[4]}" stroke="{LINE}" stroke-width="1.4" fill="none"/>')
-    b.append(f'<rect x="20" y="278" width="960" height="232" fill="none" stroke="{LINE}" stroke-width="1" stroke-dasharray="3 5"/>')
-    for i, (name, model, lines, trig) in enumerate(s["cards"]):
-        x = x0 + i * (cw + gap); esc = (i == 4); col = MODEL["Fable"][0] if esc else LINE
-        d = f"M{cx[i]} 222 V312"
-        b.append(f'<path d="{d}" fill="none" stroke="{col}" stroke-width="1.4"{DASH if esc else ""} marker-end="url({"#p" if esc else "#a"})"/>')
-        b.append(pill(cx[i], 262, trig, col, col if esc else TX))
-        b.append(box(x, 312, cw, 118, name, model, lines, col=col))
-    b.append(t(34, 452, s["caption"], 11, MU))
-    b.append(t(34, 478, s["rank"], 11, MU))
+    dn = [c + 22 for c in cx]   # delegate arrows go down on the right of each column
+    up = [c - 22 for c in cx]   # results come back up on the left
+    b.append(f'<path d="M500 190 V222 M{dn[0]} 222 H{dn[4]}" stroke="{LINE}" stroke-width="1.4" fill="none"/>')
+    b.append(f'<rect x="20" y="268" width="960" height="242" fill="none" stroke="{LINE}" stroke-width="1" stroke-dasharray="3 5"/>')
+    for i, (name, model, inside, result, trig) in enumerate(s["cards"]):
+        x = x0 + i * (cw + gap); esc = (i == 4)
+        fam = model.split()[0]; mc = MODEL[fam][0]
+        col = MODEL["Fable"][0] if esc else LINE
+        b.append(f'<path d="M{dn[i]} 222 V318" fill="none" stroke="{col}" stroke-width="1.4"{DASH if esc else ""} marker-end="url(#{"m-Fable" if esc else "a"})"/>')
+        b.append(pill(dn[i], 262, trig, col, col if esc else TX))
+        # result coming back up, in the model's color, label to the left of the arrow
+        b.append(f'<path d="M{up[i]} 318 V286" fill="none" stroke="{mc}" stroke-width="1.6" marker-end="url(#m-{fam})"/>')
+        for k, line in enumerate(result):
+            b.append(t(up[i] - 8, 296 + k * 14 - (len(result) - 1) * 7, line, 11, mc, 700, "end"))
+        # card: name, model, what stays inside
+        b.append(box(x, 318, cw, 104, name, model, [], col=col))
+        b.append(t(x + 14, 318 + 78, s["inside"], 10.5, MU) + t(x + 14, 318 + 94, inside, 11.5, TX))
+    b.append(t(34, 448, s["caption"], 11, MU))
+    b.append(t(34, 474, s["rank"], 11, MU))
     lx = 34 + len(s["rank"]) * 6.7 + 14
     for nm in ("Haiku", "Sonnet", "Opus", "Fable"):
-        c, r = MODEL[nm]
-        b.append(dots(lx + 5, 475, r, c) + t(lx + 60, 478, nm, 11, c, 700))
+        c, r_ = MODEL[nm]
+        b.append(dots(lx + 5, 471, r_, c) + t(lx + 60, 474, nm, 11, c, 700))
         lx += 60 + len(nm) * 7 + 18
-    b.append(t(34, 500, s["legend"], 11, MODEL["Fable"][0]))
+    b.append(t(34, 498, s["legend"], 11, MODEL["Fable"][0]))
     return svg(W, H, s["wt"], s["wd"], "\n".join(b))
 
 
