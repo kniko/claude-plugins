@@ -90,6 +90,17 @@ After `setup` or `off`, start a new session in the repo.
 | Delegation rules | Yes | Yes + stop fix loops · No |
 | Test-output filter | Yes: Bash tool (needs `bash` and `jq`), PowerShell tool (needs `pwsh` or Windows PowerShell), or both | No |
 
+### Why Sonnet as the main model, and not Fable
+
+Sonnet is a valid main model and the one repo-mode recommends, with an Opus advisor. The reasoning:
+
+- **The main model is the most expensive seat.** It takes every turn and re-reads the whole conversation each time, so its price multiplies across the session. The helpers only see their own small context.
+- **Deciding who gets which job is the easy part.** The delegation rules in `CLAUDE.local.md` already say when to hand work to Explore, test-runner and audit. That doesn't need the strongest model.
+- **A Fable main model narrows the advisor.** In the docs' pairing table a Fable 5.2 main model accepts only a Fable 5.2 advisor, so the "cheaper main, stronger advisor" arrangement is gone.
+- **Fable pays off where the thinking is the work**: a hard design decision, or a bug nothing else cracked. That is what `escalate` is for: called rarely, read-only, with a full briefing.
+
+If a whole session is that kind of work, start that one session on Fable with `claude --model fable` rather than changing the repo's setting. Avoid `/model fable` for it: that also saves Fable as your global default (see Notes). If you do run it, for example to accept the one-time Fable usage-credits consent, switch back afterwards with `/model <your usual model>`.
+
 ## What it writes in each repo
 
 **"Only me" scope (default)**: nothing is committed.
@@ -107,7 +118,9 @@ After `setup` or `off`, start a new session in the repo.
 - **Ultracode:** repo-mode never turns it on. With ultracode, Claude writes a workflow for every substantive task at `xhigh` effort, and the docs say each request uses more tokens and takes longer. Turn it on only for a big task with `/effort ultracode`, and off again with `/effort ultracode off`. Workflow agents without a model of their own then use the one repo-mode set.
 - **Test filter:** it only catches plain test commands, with no `;`, `|`, `&&` etc. Every other command passes through unchanged. Without `jq` (Bash variant) or `pwsh`/`powershell.exe` (PowerShell variant) it does nothing. The command that actually runs is the wrapped one, so an allow rule like `Bash(pytest *)` no longer matches and Claude may ask for approval. The PowerShell variant is for the separate PowerShell tool (a preview in the docs; opt-in on WSL/Linux/macOS with `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`). It was tested with `pwsh` 7 and Windows PowerShell 5.1, not yet in a live Windows session. `/hooks` shows whether it's active.
 - The advisor is experimental and works only through the Anthropic API, not Bedrock, Vertex or Foundry. It doesn't work if `DISABLE_TELEMETRY` is set. Each call re-reads the whole conversation, uncached, at the advisor model's rates. It pays off on long multi-step work, not on short tasks.
-- Don't change the advisor from the `/advisor` picker: it saves to your global settings and applies to every repo.
+- Don't change the advisor from the `/advisor` picker: it saves to your global settings and applies to every repo. `/model <name>` does the same for the model: it switches the session and saves that model as your global default. In this repo the repo setting wins again at the next fresh session.
+- Subagents inherit the advisor, so a Haiku helper can consult the Opus advisor at Opus rates. There is no documented per-subagent switch; `/usage` shows whether it happens. repo-mode doesn't measure it.
+- Running `/repo-mode:setup` again updates the existing setup: what you no longer choose is removed, and `/repo-mode:off` still restores the values from before the first run. To switch between "Only me" and "Whole team", run `/repo-mode:off` first.
 - `audit` does similar work to the built-in `/code-review`. `audit` runs automatically before "done"; `/code-review` runs whenever you call it.
 - The `audit` agent doesn't run in a worktree: a worktree starts from the default branch without your uncommitted changes, so it wouldn't see the diff.
 - `audit` and `test-runner` have Bash. That they don't change files is stated in their instructions, not enforced by Claude Code. `Explore` is technically read-only (Read, Grep, Glob only).

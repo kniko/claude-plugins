@@ -30,7 +30,7 @@ if ($RunCommand) {
         $ctx = New-Object System.Collections.Generic.List[string]
         $k = 0
         foreach ($l in $lines) {
-            if ($l -cmatch 'FAIL|ERROR|Error|error:|Traceback|panic:|AssertionError') { $k = 6 }
+            if ($l -cmatch 'FAIL|ERROR|Error|error:|Traceback|panic:|AssertionError|panicked|Failed asserting') { $k = 6 }
             if ($k -gt 0) { if ($ctx.Count -lt 100) { $ctx.Add($l) }; $k-- }
         }
         if ($ctx.Count -gt 0) {

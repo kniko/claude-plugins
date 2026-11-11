@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # repo-mode handoff
 
-Write a short handoff file for the next session. Talk to the user in the language they use (default: Greek); the file itself is in English unless the user asks otherwise.
+Write a short handoff file for the next session. Talk to the user in the language they use; the file itself is in English unless the user asks otherwise.
 
 1. Find the repository root (`git rev-parse --show-toplevel`; if this isn't a git repo, use the current folder). The file is `HANDOFF.md` there. If it exists, read it and replace it: it describes the previous stop, not this one.
 2. Gather facts, read-only: `git status --short`, `git diff --stat`, `git log --oneline -5`, and what this conversation established (the goal, what was done, what was decided and why, what failed).
