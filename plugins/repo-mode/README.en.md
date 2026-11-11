@@ -54,13 +54,13 @@ To see where tokens go, `/usage` shows consumption per subagent.
 
 ## How the work is split
 
-![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split-v3.en.svg)
+![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split-v4.en.svg)
 
 Each subagent starts with its own clean context, without CLAUDE.md (`omitClaudeMd: true`) and without the Agent tool, so it can't start subagents of its own. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
 
 ## How the setup is created
 
-![Diagram: the setup wizard asks and reads only, shows a plan, and writes files only after approval](docs/setup-flow-v3.en.svg)
+![Diagram: the setup wizard asks and reads only, shows a plan, and writes files only after approval](docs/setup-flow-v4.en.svg)
 
 At the approval step you can also change your answers: the wizard goes back to Round 1. A model/advisor pair that isn't allowed is asked again in the same round. With the "Whole team" scope the files are `.claude/settings.json` and `CLAUDE.md`, for committing.
 
