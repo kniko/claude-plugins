@@ -1,69 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" width="1000" height="500" role="img" aria-labelledby="t d" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif">
-<title id="t">Πώς μοιράζεται η δουλειά</title><desc id="d">Το κύριο session αναθέτει σε subagents με δικό τους context· ο advisor ρωτιέται στα σημεία απόφασης· ο escalate καλείται μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.</desc>
-<defs>
-<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9 z" fill="#8b949e"/></marker>
-</defs>
-<rect width="1000" height="500" rx="14" fill="#0d1117" stroke="#30363d"/>
-
-<rect x="440" y="22" width="120" height="34" rx="17" fill="#1c2330" stroke="#30363d"/><text x="500" y="44" font-size="14" fill="#e6edf3" font-weight="600" text-anchor="middle" >Εσύ</text>
-<path d="M500 56 V84" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="350" y="84" width="300" height="92" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="350" y="84" width="5" height="92" rx="2.5" fill="#58a6ff"/>
-<text x="368" y="114" font-size="16" fill="#e6edf3" font-weight="600" text-anchor="start" >Κύριο session</text>
-<text x="368" y="137" font-size="12.5" fill="#58a6ff" font-weight="600" text-anchor="start" >Sonnet 5.5 · effort medium</text>
-<text x="368" y="156" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >μιλάει · γράφει κώδικα</text>
-<rect x="770" y="84" width="200" height="92" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="770" y="84" width="5" height="92" rx="2.5" fill="#bc8cff"/>
-<text x="788" y="114" font-size="16" fill="#e6edf3" font-weight="600" text-anchor="start" >Advisor</text>
-<text x="788" y="137" font-size="12.5" fill="#bc8cff" font-weight="600" text-anchor="start" >Opus 5.5</text>
-<text x="788" y="156" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ σχέδιο / διόρθωση</text>
-<path d="M650 130 H770" fill="none" stroke="#8b949e" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a)" marker-start="url(#a)"/>
-<rect x="651.7" y="102.2" width="116.6" height="23.5" rx="11.8" fill="#1c2330" stroke="#30363d"/>
-<text x="710.0" y="118.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >σημεία απόφασης</text>
-<path d="M500 176 V212" fill="none" stroke="#8b949e" stroke-width="1.6"/>
-<path d="M126.0 212 H874.0" fill="none" stroke="#8b949e" stroke-width="1.6"/>
-<rect x="20" y="276" width="960" height="204" rx="14" fill="#161b22" fill-opacity="0.55" stroke="#30363d" stroke-dasharray="6 5"/><text x="500" y="466" font-size="12" fill="#8b949e" font-weight="500" text-anchor="middle" >Subagents · δικό τους context, επιστρέφουν μόνο περίληψη</text>
-<path d="M126.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="83.8" y="236.2" width="84.4" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
-<text x="126.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >10+ αρχεία</text>
-<rect x="40" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="40" y="300" width="5" height="104" rx="2.5" fill="#3fb950"/>
-<text x="58" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >Explore</text>
-<text x="58" y="353" font-size="12.5" fill="#3fb950" font-weight="600" text-anchor="start" >Haiku · low</text>
-<text x="58" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ path:line</text>
-<path d="M313.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="264.4" y="236.2" width="97.3" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
-<text x="313.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >tests · logs</text>
-<rect x="227" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="227" y="300" width="5" height="104" rx="2.5" fill="#3fb950"/>
-<text x="245" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >test-runner</text>
-<text x="245" y="353" font-size="12.5" fill="#3fb950" font-weight="600" text-anchor="start" >Haiku · low</text>
-<text x="245" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ μόνο failures</text>
-<path d="M500.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="441.7" y="236.2" width="116.6" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
-<text x="500.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >πριν το «τέλος»</text>
-<rect x="414" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="414" y="300" width="5" height="104" rx="2.5" fill="#39c5cf"/>
-<text x="432" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >audit</text>
-<text x="432" y="353" font-size="12.5" fill="#39c5cf" font-weight="600" text-anchor="start" >Sonnet · high</text>
-<text x="432" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ ευρήματα +</text>
-<text x="432" y="391" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >   αποδείξεις</text>
-<path d="M687.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" marker-end="url(#a)"/>
-<rect x="651.2" y="236.2" width="71.5" height="23.5" rx="11.8" fill="#0d1117" stroke="#30363d"/>
-<text x="687.0" y="252.8" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >υπόλοιπα</text>
-<rect x="601" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="601" y="300" width="5" height="104" rx="2.5" fill="#39c5cf"/>
-<text x="619" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >general-purpose</text>
-<text x="619" y="353" font-size="12.5" fill="#39c5cf" font-weight="600" text-anchor="start" >Sonnet · και Plan</text>
-<text x="619" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ περίληψη</text>
-<path d="M874.0 212 V300" fill="none" stroke="#8b949e" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<rect x="789.9" y="228.5" width="168.1" height="39.0" rx="9.0" fill="#0d1117" stroke="#30363d"/>
-<text x="874.0" y="245.0" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >advisor + 2 προσπάθειες</text>
-<text x="874.0" y="260.5" font-size="11.5" fill="#8b949e" font-weight="500" text-anchor="middle" >απέτυχαν</text>
-<rect x="788" y="300" width="172" height="104" rx="10" fill="#161b22" stroke="#30363d"/>
-<rect x="788" y="300" width="5" height="104" rx="2.5" fill="#ff7eb6"/>
-<text x="806" y="330" font-size="15" fill="#e6edf3" font-weight="600" text-anchor="start" >escalate</text>
-<text x="806" y="353" font-size="12.5" fill="#ff7eb6" font-weight="600" text-anchor="start" >Fable · high</text>
-<text x="806" y="372" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >→ διάγνωση +</text>
-<text x="806" y="391" font-size="12" fill="#8b949e" font-weight="400" text-anchor="start" >   επόμενο βήμα</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="1000" height="520" role="img" aria-labelledby="t d" font-family="ui-monospace, 'Cascadia Mono', Consolas, 'DejaVu Sans Mono', Menlo, monospace">
+<title id="t">Πώς μοιράζεται η δουλειά</title><desc id="d">Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.</desc>
+<defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#16305c" stroke-width="0.6"/></pattern><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#7db3ff" stroke-width="1.5"/></marker><marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#ff7eb6" stroke-width="1.5"/></marker></defs>
+<rect width="1000" height="520" rx="12" fill="#0b1f3f"/><rect width="1000" height="520" rx="12" fill="url(#g)"/>
+<rect x="440" y="24" width="120" height="30" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="500" y="44" font-size="13" fill="#eaf2ff" font-weight="700" text-anchor="middle">ΕΣΥ</text>
+<path d="M500 54 V84" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="340" y="84" width="320" height="106" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="354" y="112" font-size="16" fill="#eaf2ff" font-weight="700" text-anchor="start">κύριο session</text><circle cx="359" cy="129" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="372" cy="129" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="385" cy="129" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><circle cx="398" cy="129" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><text x="415" y="133" font-size="12" fill="#39c5cf" font-weight="700" text-anchor="start">Sonnet 5.5</text><text x="354" y="152" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">effort medium</text><text x="354" y="171" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">μιλάει, γράφει κώδικα</text>
+<rect x="770" y="84" width="200" height="106" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="784" y="112" font-size="16" fill="#eaf2ff" font-weight="700" text-anchor="start">advisor</text><circle cx="789" cy="129" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="802" cy="129" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="815" cy="129" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="828" cy="129" r="4.2" fill="none" stroke="#bc8cff" stroke-width="1.2"/><text x="845" y="133" font-size="12" fill="#bc8cff" font-weight="700" text-anchor="start">Opus 5.5</text><text x="784" y="152" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">βλέπει όλη τη συζήτηση</text><text x="784" y="171" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ σχέδιο / διόρθωση</text>
+<path d="M660 137 H770" fill="none" stroke="#7db3ff" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#a)" marker-start="url(#a)"/>
+<text x="715" y="127" font-size="10.5" fill="#8fb0e0" font-weight="400" text-anchor="middle">στις αποφάσεις</text>
+<path d="M500 190 V222 M126.0 222 H874.0" stroke="#7db3ff" stroke-width="1.4" fill="none"/>
+<rect x="20" y="278" width="960" height="232" fill="none" stroke="#7db3ff" stroke-width="1" stroke-dasharray="3 5"/>
+<path d="M126.0 222 V312" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="85" y="240" width="82" height="22" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1"/><text x="126" y="255" font-size="10.5" fill="#eaf2ff" font-weight="400" text-anchor="middle">10+ αρχεία</text>
+<rect x="40" y="312" width="172" height="118" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="54" y="340" font-size="15" fill="#eaf2ff" font-weight="700" text-anchor="start">Explore</text><circle cx="59" cy="357" r="4.2" fill="#5fd07a" stroke="#5fd07a" stroke-width="1.2"/><circle cx="72" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="85" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="98" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><text x="115" y="361" font-size="12" fill="#5fd07a" font-weight="700" text-anchor="start">Haiku</text><text x="54" y="380" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ path:line</text>
+<path d="M313.0 222 V312" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="265" y="240" width="95" height="22" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1"/><text x="313" y="255" font-size="10.5" fill="#eaf2ff" font-weight="400" text-anchor="middle">tests · logs</text>
+<rect x="227" y="312" width="172" height="118" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="241" y="340" font-size="15" fill="#eaf2ff" font-weight="700" text-anchor="start">test-runner</text><circle cx="246" cy="357" r="4.2" fill="#5fd07a" stroke="#5fd07a" stroke-width="1.2"/><circle cx="259" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="272" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="285" cy="357" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><text x="302" y="361" font-size="12" fill="#5fd07a" font-weight="700" text-anchor="start">Haiku</text><text x="241" y="380" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ μόνο failures</text>
+<path d="M500.0 222 V312" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="442" y="240" width="115" height="22" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1"/><text x="500" y="255" font-size="10.5" fill="#eaf2ff" font-weight="400" text-anchor="middle">πριν το «τέλος»</text>
+<rect x="414" y="312" width="172" height="118" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="428" y="340" font-size="15" fill="#eaf2ff" font-weight="700" text-anchor="start">audit</text><circle cx="433" cy="357" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="446" cy="357" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="459" cy="357" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><circle cx="472" cy="357" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><text x="489" y="361" font-size="12" fill="#39c5cf" font-weight="700" text-anchor="start">Sonnet</text><text x="428" y="380" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ ευρήματα +</text><text x="428" y="399" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">   αποδείξεις</text>
+<path d="M687.0 222 V312" fill="none" stroke="#7db3ff" stroke-width="1.4" marker-end="url(#a)"/>
+<rect x="653" y="240" width="69" height="22" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1"/><text x="687" y="255" font-size="10.5" fill="#eaf2ff" font-weight="400" text-anchor="middle">υπόλοιπα</text>
+<rect x="601" y="312" width="172" height="118" fill="#0b1f3f" stroke="#7db3ff" stroke-width="1.4"/><text x="615" y="340" font-size="15" fill="#eaf2ff" font-weight="700" text-anchor="start">general-purpose</text><circle cx="620" cy="357" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="633" cy="357" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="646" cy="357" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><circle cx="659" cy="357" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><text x="676" y="361" font-size="12" fill="#39c5cf" font-weight="700" text-anchor="start">Sonnet</text><text x="615" y="380" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ περίληψη</text><text x="615" y="399" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">τρέχει και το Plan</text>
+<path d="M874.0 222 V312" fill="none" stroke="#ff7eb6" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#p)"/>
+<rect x="790" y="226" width="168" height="36" fill="#0b1f3f" stroke="#ff7eb6" stroke-width="1"/><text x="874" y="241" font-size="10.5" fill="#ff7eb6" font-weight="400" text-anchor="middle">advisor + 2 προσπάθειες</text><text x="874" y="255" font-size="10.5" fill="#ff7eb6" font-weight="400" text-anchor="middle">απέτυχαν</text>
+<rect x="788" y="312" width="172" height="118" fill="#0b1f3f" stroke="#ff7eb6" stroke-width="1.4"/><text x="802" y="340" font-size="15" fill="#eaf2ff" font-weight="700" text-anchor="start">escalate</text><circle cx="807" cy="357" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="820" cy="357" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="833" cy="357" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="846" cy="357" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><text x="863" y="361" font-size="12" fill="#ff7eb6" font-weight="700" text-anchor="start">Fable</text><text x="802" y="380" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">→ διάγνωση +</text><text x="802" y="399" font-size="11.5" fill="#8fb0e0" font-weight="400" text-anchor="start">   επόμενο βήμα</text>
+<text x="34" y="452" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="start">subagents: δικό τους context, επιστρέφουν μόνο περίληψη</text>
+<text x="34" y="478" font-size="11" fill="#8fb0e0" font-weight="400" text-anchor="start">βαθμίδα μοντέλου</text>
+<circle cx="160.2" cy="475" r="4.2" fill="#5fd07a" stroke="#5fd07a" stroke-width="1.2"/><circle cx="173.2" cy="475" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="186.2" cy="475" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><circle cx="199.2" cy="475" r="4.2" fill="none" stroke="#5fd07a" stroke-width="1.2"/><text x="215.2" y="478" font-size="11" fill="#5fd07a" font-weight="700" text-anchor="start">Haiku</text>
+<circle cx="273.2" cy="475" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="286.2" cy="475" r="4.2" fill="#39c5cf" stroke="#39c5cf" stroke-width="1.2"/><circle cx="299.2" cy="475" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><circle cx="312.2" cy="475" r="4.2" fill="none" stroke="#39c5cf" stroke-width="1.2"/><text x="328.2" y="478" font-size="11" fill="#39c5cf" font-weight="700" text-anchor="start">Sonnet</text>
+<circle cx="393.2" cy="475" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="406.2" cy="475" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="419.2" cy="475" r="4.2" fill="#bc8cff" stroke="#bc8cff" stroke-width="1.2"/><circle cx="432.2" cy="475" r="4.2" fill="none" stroke="#bc8cff" stroke-width="1.2"/><text x="448.2" y="478" font-size="11" fill="#bc8cff" font-weight="700" text-anchor="start">Opus</text>
+<circle cx="499.2" cy="475" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="512.2" cy="475" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="525.2" cy="475" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><circle cx="538.2" cy="475" r="4.2" fill="#ff7eb6" stroke="#ff7eb6" stroke-width="1.2"/><text x="554.2" y="478" font-size="11" fill="#ff7eb6" font-weight="700" text-anchor="start">Fable</text>
+<text x="34" y="500" font-size="11" fill="#ff7eb6" font-weight="400" text-anchor="start">διακεκομμένο = μόνο αν απέτυχαν ο advisor και δύο δικές του προσπάθειες</text>
 </svg>
