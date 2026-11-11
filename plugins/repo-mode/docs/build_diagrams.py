@@ -53,13 +53,17 @@ def arrow(d, dashed=False, col=LINE, both=False):
     return f'<path d="{d}" fill="none" stroke="{col}" stroke-width="1.4"{DASH if dashed else ""}{m}/>'
 
 
-def svg(w, h, title, desc, body):
+def svg(w, h, title, desc, body, head=None):
+    top = 80 if head else 0
+    h += top
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}" role="img" aria-labelledby="t d" font-family="{MONO}">\n'
             f'<title id="t">{escape(title)}</title><desc id="d">{escape(desc)}</desc>\n'
             f'<defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="{GRID}" stroke-width="0.6"/></pattern>'
             f'<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{LINE}" stroke-width="1.5"/></marker>'
             +"".join(f'<marker id="m-{k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{v[0]}" stroke-width="1.5"/></marker>' for k, v in MODEL.items())+'</defs>\n'
-            f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n{body}\n'
+            f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n'
+            + (f'{t(34, 44, head[0], 22, TX, 700)}{t(34, 68, head[1], 13, MU)}<path d="M34 82 H{w-34}" stroke="{LINE}" stroke-width="1" opacity="0.5"/>\n' if head else "")
+            + f'<g transform="translate(0,{top})">\n{body}\n</g>\n'
             f'{t(w - 18, h - 34, INSTALL[0], 11, MU, 400, "end")}{t(w - 18, h - 16, INSTALL[1], 11, MU, 400, "end")}\n</svg>\n')
 
 
@@ -74,7 +78,7 @@ STR = {
             ("escalate", "Fable", "reads, reproduces", ["diagnosis +", "next step"], ["advisor + 2 tries", "failed"])],
         caption="each subagent has its own context: the long output stays inside, only the result comes back up", rank="model rank",
         legend="dashed = only after the advisor and two of its own tries failed",
-        wt="How the work is split", wd="The main session delegates to subagents with their own context, consults the advisor at decision points, and calls escalate only after the advisor and two tries failed.",
+        head=("Stop paying Opus prices for grep.", "Right model. Right job. Every repo."), wt="How the work is split", wd="The main session delegates to subagents with their own context, consults the advisor at decision points, and calls escalate only after the advisor and two tries failed.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · questions and reads only",
                    steps=[("Check repo", ["version", "settings"]), ("Round 1", ["model · advisor", "agents · scope"]),
                           ("Round 2", ["model per agent", "+ the rest"]), ("Rounds 3–4", ["effort · workflows", "rules · deny", "secrets · escalate", "test filter · LSP"]),
@@ -82,7 +86,7 @@ STR = {
                    approve="Approve?", yes="yes", no="no", nothing="Nothing is written", writes="Writes",
                    writes_l=["settings.local.json · agents/*.md", "CLAUDE.local.md · hooks/ · .git/info/exclude", "repo-mode.json (state, for /off)"],
                    back="or change your answers → back to Round 1",
-                   title="How the setup is created", desc="The wizard asks and reads only, shows a before/after plan, and writes files only after you approve.")),
+                   head=("Nothing is written until you say yes.", "One wizard. Zero surprises."), title="How the setup is created", desc="The wizard asks and reads only, shows a before/after plan, and writes files only after you approve.")),
     "el": dict(
         you="ΕΣΥ", main="κύριο session", main_l=["effort medium", "κρατά μόνο τα αποτελέσματα"], adv="advisor", adv_l=["βλέπει όλη τη συζήτηση"],
         ask="ρωτά", advice="συμβουλή", inside="μένει μέσα:", cards=[
@@ -93,7 +97,7 @@ STR = {
             ("escalate", "Fable", "αναπαράγει το σφάλμα", ["διάγνωση +", "επόμενο βήμα"], ["advisor + 2 προσπάθειες", "απέτυχαν"])],
         caption="κάθε subagent έχει δικό του context: το μεγάλο output μένει μέσα, επιστρέφει μόνο το αποτέλεσμα", rank="βαθμίδα μοντέλου",
         legend="διακεκομμένο = μόνο αν απέτυχαν ο advisor και δύο δικές του προσπάθειες",
-        wt="Πώς μοιράζεται η δουλειά", wd="Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.",
+        head=("Μην πληρώνεις Opus για να ψάχνει αρχεία.", "Σωστό model. Σωστή δουλειά. Σε κάθε repo."), wt="Πώς μοιράζεται η δουλειά", wd="Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · μόνο ερωτήσεις και ανάγνωση",
                    steps=[("Έλεγχος repo", ["έκδοση", "ρυθμίσεις"]), ("Γύρος 1", ["model · advisor", "agents · scope"]),
                           ("Γύρος 2", ["model κάθε agent", "+ υπόλοιποι"]), ("Γύρος 3–4", ["effort · workflows", "κανόνες · deny", "secrets · escalate", "φίλτρο · LSP"]),
@@ -101,7 +105,7 @@ STR = {
                    approve="Έγκριση;", yes="ναι", no="όχι", nothing="Δεν γράφεται τίποτα", writes="Γράφει",
                    writes_l=["settings.local.json · agents/*.md", "CLAUDE.local.md · hooks/ · .git/info/exclude", "repo-mode.json (κατάσταση, για το /off)"],
                    back="ή άλλαξε απαντήσεις → πίσω στον Γύρο 1",
-                   title="Πώς δημιουργείται το setup", desc="Ο wizard μόνο ρωτά και διαβάζει, δείχνει σχέδιο before/after και γράφει αρχεία μόνο μετά την έγκρισή σου.")),
+                   head=("Δεν γράφεται τίποτα πριν πεις ναι.", "Ένας wizard. Καμία έκπληξη."), title="Πώς δημιουργείται το setup", desc="Ο wizard μόνο ρωτά και διαβάζει, δείχνει σχέδιο before/after και γράφει αρχεία μόνο μετά την έγκρισή σου.")),
 }
 
 
@@ -140,7 +144,7 @@ def work_split(lang):
         b.append(dots(lx + 5, 471, r_, c) + t(lx + 60, 474, nm, 11, c, 700))
         lx += 60 + len(nm) * 7 + 18
     b.append(t(34, 498, s["legend"], 11, MODEL["Fable"][0]))
-    return svg(W, H, s["wt"], s["wd"], "\n".join(b))
+    return svg(W, H, s["wt"], s["wd"], "\n".join(b), s["head"])
 
 
 def setup_flow(lang):
@@ -164,11 +168,11 @@ def setup_flow(lang):
     b.append(arrow(f"M{dcx-dw-2} {dcy} H360")); b.append(t(dcx - dw - 28, dcy - 8, s["no"], 10.5, MU, 700, "middle"))
     b.append(f'<rect x="20" y="328" width="340" height="36" fill="{INK}" stroke="{MU}" stroke-width="1.2" stroke-dasharray="3 3"/>' + t(190, 351, s["nothing"], 13, MU, 700, "middle"))
     b.append(t(34, 436, s["back"], 11, MU))
-    return svg(W, H, s["title"], s["desc"], "\n".join(b))
+    return svg(W, H, s["title"], s["desc"], "\n".join(b), s["head"])
 
 
 if __name__ == "__main__":
     for lang in ("en", "el"):
-        open(os.path.join(OUT, f"work-split-v3.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
-        open(os.path.join(OUT, f"setup-flow-v3.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
+        open(os.path.join(OUT, f"work-split-v4.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
+        open(os.path.join(OUT, f"setup-flow-v4.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
     print("ok")
