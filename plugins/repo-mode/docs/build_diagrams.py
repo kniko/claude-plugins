@@ -12,7 +12,7 @@ AMBER, GREEN = "#ffb347", "#5fd07a"
 # one color per model family, used for the model name and the rank dots
 MODEL = {"Haiku": ("#5fd07a", 1), "Sonnet": ("#39c5cf", 2), "Opus": ("#bc8cff", 3), "Fable": ("#ff7eb6", 4)}
 DASH = ' stroke-dasharray="5 4"'
-REPO = "github.com/kniko/claude-plugins"
+INSTALL = ("claude plugin marketplace add kniko/claude-plugins", "claude plugin install repo-mode@kniko-tools")
 
 
 def t(x, y, s, size=12, fill=TX, weight=400, anchor="start"):
@@ -60,7 +60,7 @@ def svg(w, h, title, desc, body):
             f'<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{LINE}" stroke-width="1.5"/></marker>'
             +"".join(f'<marker id="m-{k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{v[0]}" stroke-width="1.5"/></marker>' for k, v in MODEL.items())+'</defs>\n'
             f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n{body}\n'
-            f'{t(w - 18, h - 14, REPO, 11, MU, 400, "end")}\n</svg>\n')
+            f'{t(w - 18, h - 34, INSTALL[0], 11, MU, 400, "end")}{t(w - 18, h - 16, INSTALL[1], 11, MU, 400, "end")}\n</svg>\n')
 
 
 STR = {
@@ -106,7 +106,7 @@ STR = {
 
 
 def work_split(lang):
-    s = STR[lang]; W, H = 1000, 540; b = []
+    s = STR[lang]; W, H = 1000, 564; b = []
     b.append(f'<rect x="440" y="24" width="120" height="30" fill="{INK}" stroke="{LINE}" stroke-width="1.4"/>' + t(500, 44, s["you"], 13, TX, 700, "middle"))
     b.append(arrow("M500 54 V84"))
     b.append(box(340, 84, 320, 106, s["main"], "Sonnet 5.5", s["main_l"], title_size=16))
@@ -163,12 +163,12 @@ def setup_flow(lang):
     b.append(box(640, 290, 340, 112, s["writes"], None, s["writes_l"], col=GREEN))
     b.append(arrow(f"M{dcx-dw-2} {dcy} H360")); b.append(t(dcx - dw - 28, dcy - 8, s["no"], 10.5, MU, 700, "middle"))
     b.append(f'<rect x="20" y="328" width="340" height="36" fill="{INK}" stroke="{MU}" stroke-width="1.2" stroke-dasharray="3 3"/>' + t(190, 351, s["nothing"], 13, MU, 700, "middle"))
-    b.append(t(500, 428, s["back"], 11, MU, 400, "middle"))
+    b.append(t(34, 436, s["back"], 11, MU))
     return svg(W, H, s["title"], s["desc"], "\n".join(b))
 
 
 if __name__ == "__main__":
     for lang in ("en", "el"):
-        open(os.path.join(OUT, f"work-split-bp.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
-        open(os.path.join(OUT, f"setup-flow-bp.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
+        open(os.path.join(OUT, f"work-split-v3.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
+        open(os.path.join(OUT, f"setup-flow-v3.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
     print("ok")
