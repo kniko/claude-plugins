@@ -12,6 +12,7 @@ AMBER, GREEN = "#ffb347", "#5fd07a"
 # one color per model family, used for the model name and the rank dots
 MODEL = {"Haiku": ("#5fd07a", 1), "Sonnet": ("#39c5cf", 2), "Opus": ("#bc8cff", 3), "Fable": ("#ff7eb6", 4)}
 DASH = ' stroke-dasharray="5 4"'
+REPO = "github.com/kniko/claude-plugins"
 
 
 def t(x, y, s, size=12, fill=TX, weight=400, anchor="start"):
@@ -58,7 +59,8 @@ def svg(w, h, title, desc, body):
             f'<defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="{GRID}" stroke-width="0.6"/></pattern>'
             f'<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{LINE}" stroke-width="1.5"/></marker>'
             +"".join(f'<marker id="m-{k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="{v[0]}" stroke-width="1.5"/></marker>' for k, v in MODEL.items())+'</defs>\n'
-            f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n{body}\n</svg>\n')
+            f'<rect width="{w}" height="{h}" rx="12" fill="{INK}"/><rect width="{w}" height="{h}" rx="12" fill="url(#g)"/>\n{body}\n'
+            f'{t(w - 18, h - 14, REPO, 11, MU, 400, "end")}\n</svg>\n')
 
 
 STR = {
@@ -104,7 +106,7 @@ STR = {
 
 
 def work_split(lang):
-    s = STR[lang]; W, H = 1000, 520; b = []
+    s = STR[lang]; W, H = 1000, 540; b = []
     b.append(f'<rect x="440" y="24" width="120" height="30" fill="{INK}" stroke="{LINE}" stroke-width="1.4"/>' + t(500, 44, s["you"], 13, TX, 700, "middle"))
     b.append(arrow("M500 54 V84"))
     b.append(box(340, 84, 320, 106, s["main"], "Sonnet 5.5", s["main_l"], title_size=16))
