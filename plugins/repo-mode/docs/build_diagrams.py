@@ -167,6 +167,6 @@ def setup_flow(lang):
 
 if __name__ == "__main__":
     for lang in ("en", "el"):
-        open(os.path.join(OUT, f"work-split.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
-        open(os.path.join(OUT, f"setup-flow.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
+        open(os.path.join(OUT, f"work-split-bp.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
+        open(os.path.join(OUT, f"setup-flow-bp.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
     print("ok")
