@@ -45,6 +45,8 @@ Out of the box, Claude Code runs almost everything on the same model, usually th
 | Every `pytest`, `npm test` or `go test` brings its whole output into context, even when everything passes. | Optional **test-output filter** (PreToolUse hook): Claude sees only the failures and the last 20 lines. The exit code stays real and the full output is saved to a temp file. | Fewer tokens on **every** test run, in the main session too. Based on the docs example, improved so the exit code isn't lost. |
 | The session that wrote the code also reviews it. | **audit** reviews the diff independently, without the conversation history and without style comments. | A fresh reviewer hasn't seen the reasoning behind the code, so it isn't swayed by it. |
 | The advisor takes one model, and the hardest problems may need a stronger one. | Optional read-only **escalate** subagent on Fable, plus a rule: call it only after the advisor and two own attempts failed. | The expensive model is used only when stuck, not for every turn. The main session must brief it; it doesn't see the conversation, and each call is billed at Fable prices. |
+| A research question takes many searches and page fetches in the main session. | Optional **researcher** subagent (Haiku; web search and fetch only: no file access, no Bash, no edits). | It runs the searches and fetches for one question and returns a short answer with source URLs and supporting lines. The fetch tool already condenses each page, so the saving is the round trips, not hidden pages. Unmeasured: it pays only if you research a lot. |
+| Designing a multi-file change in the main session mixes all the exploration reads into its context. | Optional read-only **planner** subagent on Opus, plus a rule: ask it for a plan before changes that touch several files. | The reading happens in its own context and a short plan comes back (files, order, risks, how to verify). It overlaps with the advisor: the advisor reviews your approach, the planner writes the plan. Each call is billed at Opus prices. |
 | `--continue` or `--resume` on a long conversation re-reads the whole history, uncached, on the first message. | `/repo-mode:handoff` writes a short `HANDOFF.md`; the next session starts fresh and reads only that. | A small context instead of the whole old one. |
 | Claude can read `.env` files and SSH keys. | Optional Read deny rules for `.env`, `~/.ssh` and `secrets/`. | Safety, not cost. It stops Claude's file tools and recognized file commands such as `cat`, not scripts that open files themselves. |
 | Claude guesses when to delegate, and can keep retrying fixes forever. | Short rules in `CLAUDE.local.md`. Optional: stop a fix loop after two rounds without progress. | Delegation only when it pays. Anthropic estimates multi-agent setups use 3–10× more tokens, so delegating makes sense only for 10+ files, 3+ independent pieces of work, or an independent check. |
@@ -56,7 +58,7 @@ To see where tokens go, `/usage` shows consumption per subagent.
 
 ![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split-v4.en.svg)
 
-Each subagent starts with its own clean context, without CLAUDE.md (`omitClaudeMd: true`) and without the Agent tool, so it can't start subagents of its own. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
+The diagram shows the default helpers; the optional `researcher` and `planner` work the same way. Each subagent starts with its own clean context, without the Agent tool, so it can't start subagents of its own. Most also skip CLAUDE.md (`omitClaudeMd: true`); `planner` keeps it, because a plan needs the repo's conventions. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
 
 ## How the setup is created
 
@@ -84,6 +86,8 @@ After `setup` or `off`, start a new session in the repo.
 | Explore / test-runner | Haiku | Sonnet · same as main |
 | audit | Sonnet | Opus · same as main |
 | escalate | Fable | Opus |
+| researcher (optional) | Haiku | Sonnet · skip |
+| planner (optional) | Opus; skip it if the main model is Opus, `opusplan` or Fable | Sonnet · skip |
 | Other subagents and workflow agents | Sonnet if the main model is Opus, `opusplan` or Fable; otherwise same as main | Haiku |
 | Effort | model default (`medium`) | `high` / `xhigh` for hard work, `low` for routine work |
 | Workflow size | default (`medium`, or `small` on Pro) | `small` to save · `large` / `unrestricted` for big refactors |
@@ -105,7 +109,7 @@ If a whole session is that kind of work, start that one session on Fable with `c
 
 **"Only me" scope (default)**: nothing is committed.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (the test filter)
-- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md` (whichever you pick)
+- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md`, `researcher.md`, `planner.md` (whichever you pick)
 - `.claude/hooks/repo-mode-filter-tests.sh` (Bash) and/or `repo-mode-filter-tests.ps1` (PowerShell): the test-filter script, if you pick it
 - `CLAUDE.local.md`: a block of delegation rules between `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: what changed, so undo is exact
