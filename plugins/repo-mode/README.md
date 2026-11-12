@@ -45,6 +45,8 @@ claude plugin marketplace remove local-tools
 | Κάθε `pytest`, `npm test` ή `go test` φέρνει όλη την έξοδο μέσα στο context, ακόμα και όταν όλα περνούν. | Προαιρετικό **φίλτρο εξόδου tests** (PreToolUse hook): το Claude βλέπει μόνο τα failures και τις τελευταίες 20 γραμμές. Το exit code μένει το πραγματικό και η πλήρης έξοδος σώζεται σε προσωρινό αρχείο. | Λιγότερα tokens σε **κάθε** εκτέλεση tests, και στο κύριο session. Βασίζεται στο παράδειγμα των docs, βελτιωμένο ώστε να μη χάνεται το exit code. |
 | Το review το κάνει το ίδιο session που έγραψε τον κώδικα. | Ο **audit** κάνει ανεξάρτητο review του diff, χωρίς το ιστορικό της συζήτησης και χωρίς σχόλια για στυλ. | Ένας «φρέσκος» reviewer δεν έχει δει το σκεπτικό του κώδικα, άρα δεν επηρεάζεται από αυτό. |
 | Ο advisor παίρνει ένα μόνο model και τα δυσκολότερα προβλήματα ίσως θέλουν δυνατότερο. | Προαιρετικός subagent **escalate** (μόνο ανάγνωση) σε Fable, και κανόνας: κάλεσέ τον μόνο αν ο advisor και δύο δικές σου προσπάθειες απέτυχαν. | Το ακριβό model χρησιμοποιείται μόνο όταν κολλήσεις, όχι σε κάθε turn. Το κύριο session πρέπει να τον ενημερώσει· δεν βλέπει τη συζήτηση και κάθε κλήση χρεώνεται σε τιμή Fable. |
+| Μια ερώτηση έρευνας θέλει πολλές αναζητήσεις και fetch σελίδων στο κύριο session. | Προαιρετικός subagent **researcher** (Haiku· μόνο web search και fetch: χωρίς πρόσβαση σε αρχεία, χωρίς Bash, χωρίς edits). | Κάνει τις αναζητήσεις και τα fetch για μία ερώτηση και επιστρέφει σύντομη απάντηση με URLs και γραμμές τεκμηρίωσης. Το fetch tool ήδη συμπυκνώνει κάθε σελίδα, άρα το κέρδος είναι οι γύροι αναζήτησης, όχι οι κρυμμένες σελίδες. Δεν έχει μετρηθεί: αξίζει μόνο αν κάνεις πολλή έρευνα. |
+| Ο σχεδιασμός αλλαγής σε πολλά αρχεία φορτώνει στο κύριο context όλες τις αναγνώσεις της εξερεύνησης. | Προαιρετικός subagent **planner** (μόνο ανάγνωση) σε Opus, και κανόνας: ζήτα του σχέδιο πριν από αλλαγές που αγγίζουν πολλά αρχεία. | Η ανάγνωση γίνεται στο δικό του context και επιστρέφεται σύντομο σχέδιο (αρχεία, σειρά, ρίσκα, πώς επαληθεύεται). Επικαλύπτεται με τον advisor: ο advisor ελέγχει την προσέγγισή σου, ο planner γράφει το σχέδιο. Κάθε κλήση χρεώνεται σε τιμή Opus. |
 | Το `--continue` ή `--resume` σε μεγάλη συζήτηση ξαναδιαβάζει όλο το ιστορικό, χωρίς cache, στο πρώτο μήνυμα. | Το `/repo-mode:handoff` γράφει ένα μικρό `HANDOFF.md`· το επόμενο session ξεκινά καθαρά και διαβάζει μόνο αυτό. | Μικρό context αντί για ολόκληρο το παλιό. |
 | Το Claude μπορεί να διαβάσει αρχεία `.env` και κλειδιά SSH. | Προαιρετικοί Read deny κανόνες για `.env`, `~/.ssh` και `secrets/`. | Ασφάλεια, όχι κόστος. Σταματά τα file tools του Claude και αναγνωρισμένες εντολές όπως `cat`, όχι scripts που ανοίγουν μόνα τους αρχεία. |
 | Το Claude μαντεύει πότε να αναθέσει, και μπορεί να επαναλαμβάνει διορθώσεις χωρίς τέλος. | Σύντομοι κανόνες στο `CLAUDE.local.md`. Προαιρετικά: σταμάτα έναν κύκλο διορθώσεων μετά από δύο γύρους χωρίς πρόοδο. | Ανάθεση μόνο όταν συμφέρει. Η Anthropic εκτιμά ότι τα συστήματα με πολλούς agents καίνε 3–10× περισσότερα tokens, άρα η ανάθεση έχει νόημα μόνο για 10+ αρχεία, 3+ ανεξάρτητα κομμάτια, ή ανεξάρτητο έλεγχο. |
@@ -56,7 +58,7 @@ claude plugin marketplace remove local-tools
 
 ![Διάγραμμα: το κύριο session, ο advisor και οι subagents, με το πότε χρησιμοποιείται καθένας](docs/work-split-v4.el.svg)
 
-Κάθε subagent ξεκινά με δικό του, καθαρό context, χωρίς CLAUDE.md (`omitClaudeMd: true`) και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
+Το διάγραμμα δείχνει τους προεπιλεγμένους βοηθούς· οι προαιρετικοί `researcher` και `planner` δουλεύουν με τον ίδιο τρόπο. Κάθε subagent ξεκινά με δικό του, καθαρό context και χωρίς το Agent tool, άρα δεν ξεκινά δικούς του subagents. Οι περισσότεροι παραλείπουν και το CLAUDE.md (`omitClaudeMd: true`)· ο `planner` το κρατά, γιατί ένα σχέδιο χρειάζεται τις συμβάσεις του repo. Στο κύριο session επιστρέφει μόνο το τελικό του μήνυμα. Οι subagents δεν δίνουν «εξυπνότερη» απάντηση από το κύριο session. Βοηθούν σε τρία πράγματα: παράλληλη δουλειά, θόρυβο έξω από το context, ανεξάρτητο έλεγχο.
 
 ## Πώς δημιουργούνται οι ρυθμίσεις
 
@@ -84,6 +86,8 @@ claude plugin marketplace remove local-tools
 | Explore / test-runner | Haiku | Sonnet · ίδιο με το κύριο |
 | audit | Sonnet | Opus · ίδιο με το κύριο |
 | escalate | Fable | Opus |
+| researcher (προαιρετικός) | Haiku | Sonnet · παράλειψη |
+| planner (προαιρετικός) | Opus· παράλειψη αν το κύριο είναι Opus, `opusplan` ή Fable | Sonnet · παράλειψη |
 | Υπόλοιποι subagents και workflow agents | Sonnet αν το κύριο είναι Opus, `opusplan` ή Fable. Αλλιώς ίδιο με το κύριο. | Haiku |
 | Effort | default του model (`medium`) | `high` / `xhigh` για δύσκολη δουλειά, `low` για ρουτίνα |
 | Μέγεθος workflows | default (`medium`, ή `small` σε Pro) | `small` για οικονομία · `large` / `unrestricted` για μεγάλα refactors |
@@ -105,7 +109,7 @@ claude plugin marketplace remove local-tools
 
 **Scope «Μόνο εγώ» (προεπιλογή)**: τίποτα δεν πάει σε commit.
 - `.claude/settings.local.json`: `model`, `advisorModel`, `effortLevel`, `workflowSizeGuideline`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, `permissions.deny`, `hooks.PreToolUse` (το φίλτρο tests)
-- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md` (όσα επιλέξεις)
+- `.claude/agents/Explore.md`, `test-runner.md`, `audit.md`, `escalate.md`, `researcher.md`, `planner.md` (όσα επιλέξεις)
 - `.claude/hooks/repo-mode-filter-tests.sh` (Bash) ή/και `repo-mode-filter-tests.ps1` (PowerShell): το script του φίλτρου tests, αν το επιλέξεις
 - `CLAUDE.local.md`: block με κανόνες ανάθεσης, ανάμεσα σε `<!-- repo-mode:start/end -->`
 - `.claude/repo-mode.json`: τι άλλαξε, για να γίνει σωστά το undo

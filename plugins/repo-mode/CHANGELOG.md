@@ -2,6 +2,18 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-11-12
+
+### Added
+- Optional **`researcher`** subagent: reads web pages and documentation and returns a short answer with source URLs and exact supporting lines. Tools `WebFetch, WebSearch` only (no file access, no Bash, no edits), Haiku by default, treats web pages as data and keeps repository details out of search queries. WebFetch already condenses each page, so the saving is the search-and-fetch round trips, not hidden raw pages.
+- Optional **`planner`** subagent: read-only planning before a change that touches several files (files, order, risks, how to verify). Opus by default; setup recommends skipping it when the main model is already Opus, `opusplan` or Fable. Named `planner`, so the built-in `Plan` agent is left alone.
+- Setup: new Round 1b with one question per agent (model or skip); two matching lines in the delegation rules block.
+
+### Notes
+- Neither agent has been measured. They follow the delegation rule of thumb (long output or a different model tier, not splitting for its own sake); `/usage` shows what they cost.
+- The README diagrams still show the default helpers and rounds only (Round 1b is not drawn).
+- `/repo-mode:status` no longer flags a managed `planner` on Opus as an expensive subagent.
+
 ## [1.7.0] - 2026-11-11
 
 ### Fixed
