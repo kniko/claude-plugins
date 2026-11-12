@@ -2,6 +2,11 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- README diagrams now show the optional `researcher` and `planner` (dashed cards) and Round 1b of the wizard. Files renamed to `-v5` to bypass GitHub's image cache.
+
 ## [1.8.0] - 2026-11-12
 
 ### Added
@@ -11,7 +16,6 @@ All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepach
 
 ### Notes
 - Neither agent has been measured. They follow the delegation rule of thumb (long output or a different model tier, not splitting for its own sake); `/usage` shows what they cost.
-- The README diagrams still show the default helpers and rounds only (Round 1b is not drawn).
 - `/repo-mode:status` no longer flags a managed `planner` on Opus as an expensive subagent.
 
 ## [1.7.0] - 2026-11-11

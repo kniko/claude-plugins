@@ -56,13 +56,13 @@ To see where tokens go, `/usage` shows consumption per subagent.
 
 ## How the work is split
 
-![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split-v4.en.svg)
+![Diagram: the main session, the advisor and the subagents, with when each one is used](docs/work-split-v5.en.svg)
 
-The diagram shows the default helpers; the optional `researcher` and `planner` work the same way. Each subagent starts with its own clean context, without the Agent tool, so it can't start subagents of its own. Most also skip CLAUDE.md (`omitClaudeMd: true`); `planner` keeps it, because a plan needs the repo's conventions. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
+The dashed cards are the optional `researcher` and `planner`. Each subagent starts with its own clean context, without the Agent tool, so it can't start subagents of its own. Most also skip CLAUDE.md (`omitClaudeMd: true`); `planner` keeps it, because a plan needs the repo's conventions. Only its final message returns to the main session. Subagents don't give a smarter answer than the main session; they help with three things: parallel work, keeping noise out of the context, and independent checking.
 
 ## How the setup is created
 
-![Diagram: the setup wizard asks and reads only, shows a plan, and writes files only after approval](docs/setup-flow-v4.en.svg)
+![Diagram: the setup wizard asks and reads only, shows a plan, and writes files only after approval](docs/setup-flow-v5.en.svg)
 
 At the approval step you can also change your answers: the wizard goes back to Round 1. A model/advisor pair that isn't allowed is asked again in the same round. With the "Whole team" scope the files are `.claude/settings.json` and `CLAUDE.md`, for committing.
 
