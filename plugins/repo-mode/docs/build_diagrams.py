@@ -23,8 +23,8 @@ def dots(x, y, n, col):
     return "".join(f'<circle cx="{x + i * 13}" cy="{y}" r="4.2" fill="{col if i < n else "none"}" stroke="{col}" stroke-width="1.2"/>' for i in range(4))
 
 
-def box(x, y, w, h, name, model=None, lines=(), col=LINE, title_size=15):
-    s = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{INK}" stroke="{col}" stroke-width="1.4"/>'
+def box(x, y, w, h, name, model=None, lines=(), col=LINE, title_size=15, dash=False):
+    s = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{INK}" stroke="{col}" stroke-width="1.4"{DASH if dash else ""}/>'
     s += t(x + 14, y + 28, name, title_size, TX, 700)
     cy = y + 28
     if model:
@@ -75,13 +75,15 @@ STR = {
             ("test-runner", "Haiku", "runs the full suite", ["failures only"], "tests · logs"),
             ("audit", "Sonnet", "reads the diff", ["findings +", "evidence"], "before «done»"),
             ("general-purpose", "Sonnet", "any task · also Plan", ["summary"], "everything else"),
+            ("researcher", "Haiku", "searches · fetches", ["answer +", "source URLs"], "web research"),
+            ("planner", "Opus", "reads the code", ["plan +", "risks"], "multi-file change"),
             ("escalate", "Fable", "reads, reproduces", ["diagnosis +", "next step"], ["advisor + 2 tries", "failed"])],
         caption="each subagent has its own context: the long output stays inside, only the result comes back up", rank="model rank",
-        legend="dashed = only after the advisor and two of its own tries failed",
-        head=("Stop paying Opus prices for grep.", "Right model. Right job. Every repo."), wt="How the work is split", wd="The main session delegates to subagents with their own context, consults the advisor at decision points, and calls escalate only after the advisor and two tries failed.",
+        legend="dashed arrow = only after the advisor and two of its own tries failed", legend2="dashed border = optional agent, off unless you pick it in setup",
+        head=("Stop paying Opus prices for grep.", "Right model. Right job. Every repo."), wt="How the work is split", wd="The main session delegates to subagents with their own context, consults the advisor at decision points, and calls escalate only after the advisor and two tries failed. Researcher and planner are optional.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · questions and reads only",
                    steps=[("Check repo", ["version", "settings"]), ("Round 1", ["model · advisor", "agents · scope"]),
-                          ("Round 2", ["model per agent", "+ the rest"]), ("Rounds 3–4", ["effort · workflows", "rules · deny", "secrets · escalate", "test filter · LSP"]),
+                          ("Rounds 1b–2", ["researcher · planner", "model per agent", "+ the rest"]), ("Rounds 3–4", ["effort · workflows", "rules · deny", "secrets · escalate", "test filter · LSP"]),
                           ("Plan", ["before / after", "of every file"])],
                    approve="Approve?", yes="yes", no="no", nothing="Nothing is written", writes="Writes",
                    writes_l=["settings.local.json · agents/*.md", "CLAUDE.local.md · hooks/ · .git/info/exclude", "repo-mode.json (state, for /off)"],
@@ -94,13 +96,15 @@ STR = {
             ("test-runner", "Haiku", "τρέχει όλο το suite", ["μόνο failures"], "tests · logs"),
             ("audit", "Sonnet", "διαβάζει το diff", ["ευρήματα +", "αποδείξεις"], "πριν το «τέλος»"),
             ("general-purpose", "Sonnet", "κάθε δουλειά · Plan", ["περίληψη"], "υπόλοιπα"),
+            ("researcher", "Haiku", "αναζήτηση · fetch", ["απάντηση +", "URLs πηγών"], "έρευνα στο web"),
+            ("planner", "Opus", "διαβάζει τον κώδικα", ["σχέδιο +", "ρίσκα"], "αλλαγή σε πολλά αρχεία"),
             ("escalate", "Fable", "αναπαράγει το σφάλμα", ["διάγνωση +", "επόμενο βήμα"], ["advisor + 2 προσπάθειες", "απέτυχαν"])],
         caption="κάθε subagent έχει δικό του context: το μεγάλο output μένει μέσα, επιστρέφει μόνο το αποτέλεσμα", rank="βαθμίδα μοντέλου",
-        legend="διακεκομμένο = μόνο αν απέτυχαν ο advisor και δύο δικές του προσπάθειες",
-        head=("Μην πληρώνεις Opus για να ψάχνει αρχεία.", "Σωστό model. Σωστή δουλειά. Σε κάθε repo."), wt="Πώς μοιράζεται η δουλειά", wd="Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες.",
+        legend="διακεκομμένο βέλος = μόνο αν απέτυχαν ο advisor και δύο δικές του προσπάθειες", legend2="διακεκομμένο περίγραμμα = προαιρετικός agent, ενεργός μόνο αν τον διαλέξεις στο setup",
+        head=("Μην πληρώνεις Opus για να ψάχνει αρχεία.", "Σωστό model. Σωστή δουλειά. Σε κάθε repo."), wt="Πώς μοιράζεται η δουλειά", wd="Το κύριο session αναθέτει σε subagents με δικό τους context, ρωτά τον advisor στα σημεία απόφασης και καλεί τον escalate μόνο αν απέτυχαν ο advisor και δύο προσπάθειες. Οι researcher και planner είναι προαιρετικοί.",
         setup=dict(cmd="/repo-mode:setup", wizard="wizard · μόνο ερωτήσεις και ανάγνωση",
                    steps=[("Έλεγχος repo", ["έκδοση", "ρυθμίσεις"]), ("Γύρος 1", ["model · advisor", "agents · scope"]),
-                          ("Γύρος 2", ["model κάθε agent", "+ υπόλοιποι"]), ("Γύρος 3–4", ["effort · workflows", "κανόνες · deny", "secrets · escalate", "φίλτρο · LSP"]),
+                          ("Γύροι 1b–2", ["researcher · planner", "model κάθε agent", "+ υπόλοιποι"]), ("Γύρος 3–4", ["effort · workflows", "κανόνες · deny", "secrets · escalate", "φίλτρο · LSP"]),
                           ("Σχέδιο", ["before / after", "κάθε αρχείου"])],
                    approve="Έγκριση;", yes="ναι", no="όχι", nothing="Δεν γράφεται τίποτα", writes="Γράφει",
                    writes_l=["settings.local.json · agents/*.md", "CLAUDE.local.md · hooks/ · .git/info/exclude", "repo-mode.json (κατάσταση, για το /off)"],
@@ -110,21 +114,22 @@ STR = {
 
 
 def work_split(lang):
-    s = STR[lang]; W, H = 1000, 564; b = []
-    b.append(f'<rect x="440" y="24" width="120" height="30" fill="{INK}" stroke="{LINE}" stroke-width="1.4"/>' + t(500, 44, s["you"], 13, TX, 700, "middle"))
-    b.append(arrow("M500 54 V84"))
-    b.append(box(340, 84, 320, 106, s["main"], "Sonnet 5.5", s["main_l"], title_size=16))
-    b.append(box(770, 84, 200, 106, s["adv"], "Opus 5.5", s["adv_l"], title_size=16))
-    b.append(arrow("M660 118 H770")); b.append(t(715, 110, s["ask"], 10.5, MU, 400, "middle"))
-    b.append(arrow("M770 156 H660", dashed=True)); b.append(t(715, 172, s["advice"], 10.5, MU, 400, "middle"))
-    cw, gap, x0 = 172, 15, 40
-    cx = [x0 + i * (cw + gap) + cw / 2 for i in range(5)]
+    s = STR[lang]; W, H = 1300, 592; cx0 = W // 2; b = []
+    b.append(f'<rect x="{cx0-60}" y="24" width="120" height="30" fill="{INK}" stroke="{LINE}" stroke-width="1.4"/>' + t(cx0, 44, s["you"], 13, TX, 700, "middle"))
+    b.append(arrow(f"M{cx0} 54 V84"))
+    b.append(box(cx0 - 160, 84, 320, 106, s["main"], "Sonnet 5.5", s["main_l"], title_size=16))
+    b.append(box(cx0 + 270, 84, 200, 106, s["adv"], "Opus 5.5", s["adv_l"], title_size=16))
+    b.append(arrow(f"M{cx0+160} 118 H{cx0+270}")); b.append(t(cx0 + 215, 110, s["ask"], 10.5, MU, 400, "middle"))
+    b.append(arrow(f"M{cx0+270} 156 H{cx0+160}", dashed=True)); b.append(t(cx0 + 215, 172, s["advice"], 10.5, MU, 400, "middle"))
+    cw, gap, x0 = 164, 12, 40
+    n = len(s["cards"])
+    cx = [x0 + i * (cw + gap) + cw / 2 for i in range(n)]
     dn = [c + 22 for c in cx]   # delegate arrows go down on the right of each column
     up = [c - 22 for c in cx]   # results come back up on the left
-    b.append(f'<path d="M500 190 V222 M{dn[0]} 222 H{dn[4]}" stroke="{LINE}" stroke-width="1.4" fill="none"/>')
-    b.append(f'<rect x="20" y="268" width="960" height="242" fill="none" stroke="{LINE}" stroke-width="1" stroke-dasharray="3 5"/>')
+    b.append(f'<path d="M{cx0} 190 V222 M{dn[0]} 222 H{dn[-1]}" stroke="{LINE}" stroke-width="1.4" fill="none"/>')
+    b.append(f'<rect x="20" y="268" width="{W-40}" height="268" fill="none" stroke="{LINE}" stroke-width="1" stroke-dasharray="3 5"/>')
     for i, (name, model, inside, result, trig) in enumerate(s["cards"]):
-        x = x0 + i * (cw + gap); esc = (i == 4)
+        x = x0 + i * (cw + gap); esc = (name == "escalate"); opt = name in ("researcher", "planner")
         fam = model.split()[0]; mc = MODEL[fam][0]
         col = MODEL["Fable"][0] if esc else LINE
         b.append(f'<path d="M{dn[i]} 222 V318" fill="none" stroke="{col}" stroke-width="1.4"{DASH if esc else ""} marker-end="url(#{"m-Fable" if esc else "a"})"/>')
@@ -134,7 +139,7 @@ def work_split(lang):
         for k, line in enumerate(result):
             b.append(t(up[i] - 8, 296 + k * 14 - (len(result) - 1) * 7, line, 11, mc, 700, "end"))
         # card: name, model, what stays inside
-        b.append(box(x, 318, cw, 104, name, model, [], col=col))
+        b.append(box(x, 318, cw, 104, name, model, [], col=col, dash=opt))
         b.append(t(x + 14, 318 + 78, s["inside"], 10.5, MU) + t(x + 14, 318 + 94, inside, 11.5, TX))
     b.append(t(34, 448, s["caption"], 11, MU))
     b.append(t(34, 474, s["rank"], 11, MU))
@@ -144,6 +149,7 @@ def work_split(lang):
         b.append(dots(lx + 5, 471, r_, c) + t(lx + 60, 474, nm, 11, c, 700))
         lx += 60 + len(nm) * 7 + 18
     b.append(t(34, 498, s["legend"], 11, MODEL["Fable"][0]))
+    b.append(t(34, 522, s["legend2"], 11, MU))
     return svg(W, H, s["wt"], s["wd"], "\n".join(b), s["head"])
 
 
@@ -173,6 +179,6 @@ def setup_flow(lang):
 
 if __name__ == "__main__":
     for lang in ("en", "el"):
-        open(os.path.join(OUT, f"work-split-v4.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
-        open(os.path.join(OUT, f"setup-flow-v4.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
+        open(os.path.join(OUT, f"work-split-v5.{lang}.svg"), "w", encoding="utf-8").write(work_split(lang))
+        open(os.path.join(OUT, f"setup-flow-v5.{lang}.svg"), "w", encoding="utf-8").write(setup_flow(lang))
     print("ok")
