@@ -3,8 +3,11 @@
 # dependencies = ["mcp>=1.2,<2", "pywin32>=306", "pillow>=10"]
 # ///
 """MCP server that drives a running BricsCAD (V26) through its COM automation interface."""
+import glob
 import json
 import os
+import subprocess
+import threading
 import time
 
 import pythoncom
@@ -23,16 +26,105 @@ def _app(start: bool = False):
         except Exception:
             continue
     if start:
+        # Start bricscad.exe as a normal program. A COM-launched instance (Dispatch) is owned by this
+        # process and can close when the MCP server goes away, taking unsaved work with it.
+        exe = _bricscad_exe()
+        if exe:
+            subprocess.Popen([exe], close_fds=True,
+                             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+            for _ in range(120):
+                time.sleep(1)
+                for pid in PROGIDS:
+                    try:
+                        return win32com.client.GetActiveObject(pid)
+                    except Exception:
+                        continue
+            raise RuntimeError(f"started {exe} but it did not register for COM in 120 s - is a dialog open?")
         app = win32com.client.Dispatch(PROGIDS[0])
         app.Visible = True
-        for _ in range(60):
-            try:
-                if app.Documents.Count >= 0:
-                    return app
-            except Exception:
-                time.sleep(1)
         return app
     raise RuntimeError("BricsCAD is not running. Start it (or call start_bricscad).")
+
+
+def _bricscad_exe():
+    if os.environ.get("BRICSCAD_EXE") and os.path.exists(os.environ["BRICSCAD_EXE"]):
+        return os.environ["BRICSCAD_EXE"]
+    found = sorted(glob.glob(os.path.join(os.environ.get("ProgramFiles", r"C:\Program Files"),
+                                          "Bricsys", "BricsCAD V*", "bricscad.exe")))
+    return found[-1] if found else None
+
+
+def _bricscad_windows() -> dict:
+    """Visible top-level windows of bricscad.exe: is the main window enabled (False = a modal dialog is
+    open) and the titles of dialog-like windows. Pure Win32, works even while BricsCAD is blocked."""
+    import win32api
+    import win32con
+    import win32gui
+    import win32process
+    res = {"main_enabled": None, "dialogs": []}
+    exes = {}
+
+    def is_bcad(pid):
+        if pid not in exes:
+            try:
+                hp = win32api.OpenProcess(0x1000, False, pid)        # PROCESS_QUERY_LIMITED_INFORMATION
+                exes[pid] = win32process.GetModuleFileNameEx(hp, 0).lower().endswith("bricscad.exe")
+                win32api.CloseHandle(hp)
+            except Exception:
+                exes[pid] = False
+        return exes[pid]
+
+    def cb(h, _):
+        if win32gui.IsWindowVisible(h) and is_bcad(win32process.GetWindowThreadProcessId(h)[1]):
+            title, cls = win32gui.GetWindowText(h), win32gui.GetClassName(h)
+            if cls == "BricscadMainWindow":
+                res["main_enabled"] = bool(win32gui.IsWindowEnabled(h))
+                res["title"] = title
+            elif win32gui.IsWindowEnabled(h) and title not in ("", "mini-command-line-frame"):
+                owned.append(f"{title} [{cls}]")
+        return True
+
+    owned = []
+    try:
+        win32gui.EnumWindows(cb, None)
+    except Exception:
+        pass
+    if res["main_enabled"] is False:          # modal: the enabled windows are the dialog(s)
+        res["dialogs"] = owned
+    return res
+
+
+def _send_com(text: str, timeout: float = 15.0) -> str:
+    """COM SendCommand with a guard: it blocks until the command ends, so refuse if a modal dialog is
+    open and give up waiting after `timeout` s (the command stays queued in BricsCAD)."""
+    w = _bricscad_windows()
+    if w["main_enabled"] is False:
+        return ("BricsCAD is blocked by a dialog: " + (", ".join(w["dialogs"]) or "unknown") +
+                ". Ask the user to answer/close it in BricsCAD, then retry.")
+    try:
+        active = _doc().GetVariable("CMDNAMES")
+        if active:
+            return f"BricsCAD is busy: command '{active}' is running. Ask the user to finish or cancel it (Esc)."
+    except Exception:
+        pass
+    err = []
+
+    def run():
+        try:
+            pythoncom.CoInitialize()
+            _doc().SendCommand(text)
+        except Exception as e:
+            err.append(str(e))
+
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    t.join(timeout)
+    if t.is_alive():
+        w = _bricscad_windows()
+        return (f"still running after {timeout:.0f} s: BricsCAD is waiting for input or a dialog"
+                + (": " + ", ".join(w["dialogs"]) if w["dialogs"] else "") +
+                ". Tell the user what is waiting; do not send more commands until it is done.")
+    return "error: " + err[0] if err else "sent"
 
 
 def _doc():
@@ -125,9 +217,7 @@ def command(cmd: str) -> str:
             return lisp(cmd.strip())
         r = _bridge({"op": "send", "text": cmd if cmd.endswith((" ", "\n")) else cmd + "\n"}, wait=10)
         return json.dumps(r, ensure_ascii=False)
-    doc = _doc()
-    doc.SendCommand(cmd if cmd.endswith((" ", "\n")) else cmd + "\n")
-    return "sent"
+    return _send_com(cmd if cmd.endswith((" ", "\n")) else cmd + "\n")
 
 
 # ---------------------------------------------------------------- ClaudeBridge add-in (named pipe)
@@ -187,15 +277,32 @@ def bridge_load() -> str:
         return bridge_status()
     if not os.path.exists(BRIDGE_DLL):
         return f"add-in not built: {BRIDGE_DLL} missing"
-    doc = _doc()
+    w = _bricscad_windows()
+    if w["main_enabled"] is False:
+        return "NETLOAD not done: BricsCAD is blocked by a dialog: " + (", ".join(w["dialogs"]) or "unknown")
+    # NETLOAD with a PVcase drawing (Sagia) active froze BricsCAD before .NET even started (twice); with a
+    # blank drawing active it loads in ~1 s. So load from a temporary blank drawing, then switch back.
+    app = _app()
+    orig = app.ActiveDocument if app.Documents.Count else None
+    tmp = app.Documents.Add()
     dll = BRIDGE_DLL.replace("\\", "/")
-    doc.SendCommand(f'(progn (setq claude-fd (getvar "FILEDIA")) (setvar "FILEDIA" 0) (command "_.NETLOAD" "{dll}") '
-                    f'(setvar "FILEDIA" claude-fd) (princ)) ')
+    r = _send_com(f'(progn (setq claude-fd (getvar "FILEDIA")) (setvar "FILEDIA" 0) (command "_.NETLOAD" "{dll}") '
+                  f'(setvar "FILEDIA" claude-fd) (princ)) ')
+    if r != "sent":
+        return "NETLOAD not done: " + r
+    up = False
     for _ in range(40):
         time.sleep(0.25)
         if _bridge_up():
-            return bridge_status()
-    return "NETLOAD sent but the bridge did not answer in 10 s - check the BricsCAD command line."
+            up = True
+            break
+    if orig is not None:
+        try:
+            orig.Activate()
+            tmp.Close(False)
+        except Exception:
+            pass
+    return bridge_status() if up else "NETLOAD sent but the bridge did not answer in 10 s - check the BricsCAD command line."
 
 
 @mcp.tool()

@@ -192,10 +192,50 @@ namespace ClaudeBridge
             var tcs = new TaskCompletionSource<JsonObject>(TaskCreationOptions.RunContinuationsAsynchronously);
             ui.BeginInvoke(new Action(() =>
             {
-                try { tcs.TrySetResult(f()); } catch (System.Exception ex) { tcs.TrySetResult(Err(ex.Message)); }
+                try { tcs.TrySetResult(f()); } catch (System.Exception ex) { Log("main: " + ex); tcs.TrySetResult(Err(ex.Message)); }
             }));
             if (tcs.Task.Wait(TimeSpan.FromSeconds(seconds))) return tcs.Task.Result;
             return new JsonObject { ["ok"] = false, ["status"] = "busy", ["error"] = "main thread did not respond in " + seconds + " s (modal dialog open?)" };
+        }
+
+        // Application.Get/SetSystemVariable throw eInvalidInput after a drawing was closed through COM (the
+        // "current document" stays on the closed one). Re-assert the active document and retry.
+        static object GetVar(string name)
+        {
+            try { return App.GetSystemVariable(name); }
+            catch (Teigha.Runtime.Exception)
+            {
+                ReassertActive();
+                return App.GetSystemVariable(name);
+            }
+        }
+
+        static void SetVar(string name, object value)
+        {
+            try { App.SetSystemVariable(name, value); }
+            catch (Teigha.Runtime.Exception)
+            {
+                ReassertActive();
+                App.SetSystemVariable(name, value);
+            }
+        }
+
+        static void ReassertActive()
+        {
+            var d = App.DocumentManager.MdiActiveDocument;
+            if (d != null) try { App.DocumentManager.MdiActiveDocument = d; } catch { }
+        }
+
+        static string CmdNames(Document doc)
+        {
+            try { return Convert.ToString(GetVar("CMDNAMES")); }
+            catch { return doc?.CommandInProgress ?? ""; }
+        }
+
+        static int CmdActive(Document doc)
+        {
+            try { return Convert.ToInt32(GetVar("CMDACTIVE")); }
+            catch { return string.IsNullOrEmpty(doc?.CommandInProgress) ? 0 : 1; }
         }
 
         // ---------------------------------------------------------------- ops
@@ -205,8 +245,8 @@ namespace ClaudeBridge
             var o = new JsonObject { ["ok"] = true, ["bridge"] = typeof(Bridge).Assembly.GetName().Version.ToString(3) };
             o["active"] = doc?.Name;
             o["quiescent"] = doc != null && doc.Editor.IsQuiescent;
-            o["cmdnames"] = Convert.ToString(App.GetSystemVariable("CMDNAMES"));
-            o["cmdactive"] = Convert.ToInt32(App.GetSystemVariable("CMDACTIVE"));
+            o["cmdnames"] = CmdNames(doc);
+            o["cmdactive"] = CmdActive(doc);
             var docs = new JsonArray();
             foreach (Document d in App.DocumentManager) docs.Add((JsonNode)d.Name);
             o["documents"] = docs;
@@ -218,8 +258,8 @@ namespace ClaudeBridge
         {
             var doc = App.DocumentManager.MdiActiveDocument;
             if (doc == null) return Err("no active document");
-            if (!doc.Editor.IsQuiescent || Convert.ToInt32(App.GetSystemVariable("CMDACTIVE")) != 0)
-                return Busy("BricsCAD is busy: command '" + Convert.ToString(App.GetSystemVariable("CMDNAMES")) + "' is active");
+            if (!doc.Editor.IsQuiescent || CmdActive(doc) != 0)
+                return Busy("BricsCAD is busy: command '" + CmdNames(doc) + "' is active");
             doc.SendStringToExecute(text, true, false, true);
             return new JsonObject { ["ok"] = true, ["status"] = "sent" };
         }
@@ -289,8 +329,8 @@ namespace ClaudeBridge
             {
                 var doc = App.DocumentManager.MdiActiveDocument;
                 if (doc == null) return Err("no active document");
-                if (!doc.Editor.IsQuiescent || Convert.ToInt32(App.GetSystemVariable("CMDACTIVE")) != 0)
-                    return Busy("BricsCAD is busy: command '" + Convert.ToString(App.GetSystemVariable("CMDNAMES")) + "' is active");
+                if (!doc.Editor.IsQuiescent || CmdActive(doc) != 0)
+                    return Busy("BricsCAD is busy: command '" + CmdNames(doc) + "' is active");
 
                 string wrapped =
                     "(progn (setq " + ResultSym + " (vl-catch-all-apply (function (lambda () " + expr + "\n))))" +
@@ -305,9 +345,9 @@ namespace ClaudeBridge
                 }
                 else send = wrapped.Replace('\n', ' ') + " ";
 
-                object filedia = App.GetSystemVariable("FILEDIA"), cmddia = App.GetSystemVariable("CMDDIA");
-                App.SetSystemVariable("FILEDIA", 0);
-                App.SetSystemVariable("CMDDIA", 0);
+                object filedia = GetVar("FILEDIA"), cmddia = GetVar("CMDDIA");
+                SetVar("FILEDIA", 0);
+                SetVar("CMDDIA", 0);
                 Bricscad.Global.Editor.SetLispSymbol(ResultSym,
                     new ResultBuffer(new TypedValue(5005 /* RTSTR */, Pending)));
 
@@ -324,7 +364,7 @@ namespace ClaudeBridge
                     string sv = v as string;
                     if (sv == Pending) return;                       // an inner LISP ended, not ours
                     doc.LispEnded -= finish;
-                    try { App.SetSystemVariable("FILEDIA", filedia); App.SetSystemVariable("CMDDIA", cmddia); } catch { }
+                    try { SetVar("FILEDIA", filedia); SetVar("CMDDIA", cmddia); } catch { }
                     if (cancelled) return;
                     if (sv != null && sv.StartsWith(ErrTag))
                         done.TrySetResult(new JsonObject { ["ok"] = false, ["error"] = sv.Substring(ErrTag.Length) });

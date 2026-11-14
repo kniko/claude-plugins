@@ -35,8 +35,15 @@ crash closes BricsCAD; it cannot be unloaded until BricsCAD restarts). Then:
   -p:AssemblyName=ClaudeBridgeTn`: that copy listens on `claude-bricscad-ClaudeBridgeTn` and logs to
   `%TEMP%\claude-bricscad-ClaudeBridgeTn.log`.
 
-Without the add-in, `command` goes through COM `SendCommand`, which **blocks until the command ends**:
-`'_LINE '` alone hung the MCP for 30 min. Only send complete, non-interactive command lines that way.
+Without the add-in, `command` (and `bridge_load` itself) go through COM `SendCommand`, which **blocks
+until the command ends** - `'_LINE '` alone, and once `bridge_load` right after a fresh start, hung the MCP
+for 30 min. Since 1.1.1 the server refuses when BricsCAD's main window is disabled (modal dialog - it
+names the dialog) or a command is active, and gives up waiting after 15 s instead of hanging. When you
+get such a reply, tell the user what is waiting in BricsCAD; don't retry blindly.
+NETLOAD with a PVcase drawing (Sagia, MESSARITIS) active froze BricsCAD at 100% CPU before .NET started;
+`bridge_load` therefore loads from a temporary blank drawing and switches back (1.1.2, ~2 s).
+`start_bricscad` starts bricscad.exe as a normal program (a COM-launched BricsCAD could close together with
+the MCP server). After starting, wait until the user confirms startup dialogs are gone before `bridge_load`.
 
 ## Workflow that works
 
