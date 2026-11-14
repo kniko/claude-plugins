@@ -115,10 +115,122 @@ def save(path: str = "") -> str:
 @mcp.tool()
 def command(cmd: str) -> str:
     """Send a command line to BricsCAD exactly as typed (end with a space or '\\n' to execute),
-    e.g. '_ZOOM _E ' or '(command \"_LINE\" \"0,0\" \"10,0\" \"\") '. Runs asynchronously in the drawing."""
+    e.g. '_ZOOM _E ' or '(command \"_LINE\" \"0,0\" \"10,0\" \"\") '.
+    With the ClaudeBridge add-in loaded, a LISP expression (starting with '(') is evaluated and its value
+    returned, like the `lisp` tool, and a plain command line is queued without blocking (if BricsCAD is
+    busy you get status "busy" - see `cancel`). Without the add-in it goes through COM SendCommand, which
+    BLOCKS until the command finishes: never send an interactive command (e.g. '_LINE ' alone) that way."""
+    if _bridge_up():
+        if cmd.lstrip().startswith("("):
+            return lisp(cmd.strip())
+        r = _bridge({"op": "send", "text": cmd if cmd.endswith((" ", "\n")) else cmd + "\n"}, wait=10)
+        return json.dumps(r, ensure_ascii=False)
     doc = _doc()
     doc.SendCommand(cmd if cmd.endswith((" ", "\n")) else cmd + "\n")
     return "sent"
+
+
+# ---------------------------------------------------------------- ClaudeBridge add-in (named pipe)
+PIPE = r"\\.\pipe\claude-bricscad"
+BRIDGE_DLL = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bridge", "bin", "ClaudeBridge.dll"))
+
+
+def _bridge(req: dict, wait: float = 5.0):
+    """One request/reply over the add-in's pipe. Returns the reply dict, or None if the add-in isn't loaded."""
+    import pywintypes
+    import win32file
+    import win32pipe
+    deadline = time.time() + wait
+    while True:
+        try:
+            h = win32file.CreateFile(PIPE, win32file.GENERIC_READ | win32file.GENERIC_WRITE, 0, None,
+                                     win32file.OPEN_EXISTING, 0, None)
+            break
+        except pywintypes.error as e:
+            if e.winerror == 2:                       # no such pipe: add-in not loaded
+                return None
+            if e.winerror == 231 and time.time() < deadline:   # pipe busy: previous request still running
+                try:
+                    win32pipe.WaitNamedPipe(PIPE, 1000)
+                except pywintypes.error:
+                    time.sleep(0.2)
+                continue
+            raise
+    try:
+        win32file.WriteFile(h, (json.dumps(req, ensure_ascii=False) + "\n").encode("utf-8"))
+        buf = b""
+        while not buf.endswith(b"\n"):
+            _, chunk = win32file.ReadFile(h, 65536)
+            if not chunk:
+                break
+            buf += chunk
+    finally:
+        win32file.CloseHandle(h)
+    return json.loads(buf.decode("utf-8"))
+
+
+def _bridge_up() -> bool:
+    try:
+        return _bridge({"op": "ping"}, wait=2) is not None
+    except Exception:
+        return False
+
+
+NOT_LOADED = "ClaudeBridge add-in is not loaded in BricsCAD - call bridge_load first (save open drawings before)."
+
+
+@mcp.tool()
+def bridge_load() -> str:
+    """Load the ClaudeBridge add-in (NETLOAD) into the running BricsCAD. Needed once per BricsCAD session for
+    lisp/selection/bridge_status. Save open drawings first: a crash in an add-in closes BricsCAD."""
+    if _bridge_up():
+        return bridge_status()
+    if not os.path.exists(BRIDGE_DLL):
+        return f"add-in not built: {BRIDGE_DLL} missing"
+    doc = _doc()
+    dll = BRIDGE_DLL.replace("\\", "/")
+    doc.SendCommand(f'(progn (setq claude-fd (getvar "FILEDIA")) (setvar "FILEDIA" 0) (command "_.NETLOAD" "{dll}") '
+                    f'(setvar "FILEDIA" claude-fd) (princ)) ')
+    for _ in range(40):
+        time.sleep(0.25)
+        if _bridge_up():
+            return bridge_status()
+    return "NETLOAD sent but the bridge did not answer in 10 s - check the BricsCAD command line."
+
+
+@mcp.tool()
+def bridge_status() -> str:
+    """ClaudeBridge state: active drawing, open drawings, whether BricsCAD is idle (quiescent) or which
+    command is running. Tells you if a modal dialog or a pending prompt is blocking BricsCAD."""
+    r = _bridge({"op": "ping"}, wait=5)
+    return NOT_LOADED if r is None else json.dumps(r, ensure_ascii=False)
+
+
+@mcp.tool()
+def lisp(expr: str, timeout: int = 60) -> str:
+    """Evaluate AutoLISP in the active drawing and return its value (vl-prin1-to-string form), e.g.
+    '(getvar "CLAYER")', '(load "C:/x/gen.lsp")'. Errors come back as {"ok": false, "error": ...};
+    if BricsCAD is busy (a command waiting for input, a dialog) you get status "busy" instead of a hang.
+    Greek and other Unicode text can be passed directly. Needs the ClaudeBridge add-in (bridge_load)."""
+    r = _bridge({"op": "lisp", "expr": expr, "timeout": int(timeout)}, wait=10)
+    return NOT_LOADED if r is None else json.dumps(r, ensure_ascii=False)
+
+
+@mcp.tool()
+def selection() -> str:
+    """What the user has selected in BricsCAD: `current` = live pickfirst selection, `last` = the last
+    non-empty selection (kept after it is cleared), each with handle, type, layer and bbox.
+    Use it when the user says 'this one' / 'the selected wall'. Needs the ClaudeBridge add-in."""
+    r = _bridge({"op": "selection"}, wait=5)
+    return NOT_LOADED if r is None else json.dumps(r, ensure_ascii=False)
+
+
+@mcp.tool()
+def cancel() -> str:
+    """Press Esc twice in BricsCAD: cancels a command or LISP left waiting for input (after a "busy" reply).
+    Only use it on work you started - it would also cancel something the user is doing."""
+    r = _bridge({"op": "cancel"}, wait=10)
+    return NOT_LOADED if r is None else json.dumps(r, ensure_ascii=False)
 
 
 @mcp.tool()

@@ -10,6 +10,11 @@ Drive a running **BricsCAD** (Windows, V26, COM automation) from Claude Code.
 - **Skill** `bricscad`: how to draw plans, sections and elevations with Greek text, measured dimensions,
   concrete hatches and 3D solids - Python generators that write ASCII LISP (`scripts/cadlisp.py`),
   reading results back, and the pitfalls (PNGOUT hang, PDF Save As dialog, lost selections).
+- **ClaudeBridge add-in** (`bridge/`, C# .NET 8, loaded into BricsCAD with the `bridge_load` tool): a named
+  pipe (current Windows user only) that gives the MCP `lisp` with return values, the user's `selection`,
+  `bridge_status`, `cancel`, and commands that answer "busy" instead of hanging on a dialog or prompt.
+  `bridge/bin/ClaudeBridge.dll` is prebuilt; to rebuild: `dotnet build -c Release -o ..\bin` in
+  `bridge/src` (.NET 8 SDK, BricsCAD V26 installed; other folder: set `BRICSCAD_DIR`).
 
 ## Requirements
 

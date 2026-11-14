@@ -11,6 +11,11 @@
   διαγραμμίσεις σκυροδέματος και 3D solids. Python generators που γράφουν ASCII LISP (`scripts/cadlisp.py`),
   ανάγνωση των αποτελεσμάτων, και οι παγίδες (κόλλημα του PNGOUT, το παράθυρο «Save As» του PDF,
   χαμένες επιλογές).
+- **Add-in ClaudeBridge** (`bridge/`, C# .NET 8, φορτώνεται στο BricsCAD με το εργαλείο `bridge_load`):
+  named pipe (μόνο για τον τρέχοντα χρήστη των Windows) που δίνει στο MCP `lisp` με επιστροφή τιμής,
+  την `selection` του χρήστη, `bridge_status`, `cancel`, και εντολές που απαντούν «busy» αντί να κολλάνε
+  σε dialog ή prompt. Το `bridge/bin/ClaudeBridge.dll` είναι έτοιμο· για νέο build:
+  `dotnet build -c Release -o ..\bin` στο `bridge/src` (.NET 8 SDK, BricsCAD V26· άλλος φάκελος: `BRICSCAD_DIR`).
 
 ## Απαιτήσεις
 

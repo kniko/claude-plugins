@@ -12,6 +12,31 @@ BricsCAD (Windows, COM). If its tools are deferred, load them all with ToolSearc
 `entities` (by layer; gives handle, type, bbox, text, measurement of dims), `solids` (handle, layer,
 bbox, volume), `layers` (with entity counts), `extents`, `measure`, `delete` (handles), `save`,
 `export_geometry` (JSON of 2D geometry; `server/blender_import.py` imports it into Blender), `export_dxf`, `plot_pdf`, `zoom`, `screenshot`, blocks/insert/layouts.
+With the **ClaudeBridge add-in** (below) also: `lisp` (returns the value), `selection`, `bridge_status`,
+`cancel`, `bridge_load`.
+
+## ClaudeBridge add-in (use it when you can)
+
+A .NET add-in (`bridge/bin/ClaudeBridge.dll`) running inside BricsCAD, answering on a named pipe. Load it
+once per BricsCAD session with `bridge_load` - **ask the user to save open drawings first** (an add-in
+crash closes BricsCAD; it cannot be unloaded until BricsCAD restarts). Then:
+- `lisp(expr, timeout=60)` returns `{"ok":true,"result":"<prin1 value>"}` or `{"ok":false,"error":...}`:
+  no log files needed. Greek text can be passed as-is. Multi-line/long code is fine (sent via a temp file).
+  `command` with a LISP string is routed to `lisp` automatically.
+- `command` with a plain command line is queued without blocking.
+- If BricsCAD is busy (command waiting for input, open dialog, LISP waiting on `getpoint`) you get
+  `{"status":"busy", "state":{"cmdnames":...}}` within the timeout instead of a hang. Then `cancel`
+  (Esc x2) - only for something *you* started; otherwise tell the user what is blocking.
+- `selection` - `current` pickfirst set and `last` non-empty selection (kept after the user clears it),
+  each with handle/type/layer/bbox. Use it when the user says "this one" / "the selected beam".
+- FILEDIA/CMDDIA are 0 while your LISP runs and restored after, so file prompts stay on the command line.
+- Rebuild: `dotnet build -c Release -o ..\bin` in `bridge/src` (.NET 8 SDK). A new DLL needs a BricsCAD
+  restart. To test a change side by side, build with `-p:DefineConstants=TESTBUILD
+  -p:AssemblyName=ClaudeBridgeTn`: that copy listens on `claude-bricscad-ClaudeBridgeTn` and logs to
+  `%TEMP%\claude-bricscad-ClaudeBridgeTn.log`.
+
+Without the add-in, `command` goes through COM `SendCommand`, which **blocks until the command ends**:
+`'_LINE '` alone hung the MCP for 30 min. Only send complete, non-interactive command lines that way.
 
 ## Workflow that works
 
@@ -23,9 +48,10 @@ bbox, volume), `layers` (with entity counts), `extents`, `measure`, `delete` (ha
    `concrete(pts)` (outline + hatch), `dim(...)`, `ext3d/box` (3D), `log(...)`, `end(path, log=...)`.
    Set `cadlisp.OFFSET` to place a section/elevation/3D model beside the plan in the same model space.
    Worked example of a full set (plan, section, elevation, 3D) in `references/example-deh-substation/`.
-3. **Read results back through a file.** `command` gives no output, so LISP writes to a log
-   (`end(..., log=path)` / `logw`) and you `cat` it. The next MCP call normally runs after the load has
-   finished; if the log is missing, check again before assuming failure.
+3. **Read results back**: with the add-in, `lisp '(load "C:/.../file.lsp")'` returns the value of the
+   file's last expression (make it a summary list). Without it, `command` gives no output, so LISP writes
+   to a log (`end(..., log=path)` / `logw`) and you `cat` it; if the log is missing, check again before
+   assuming failure.
 4. Verify numerically, not with screenshots: `entities` (dim `measurement`, text, bbox), `solids`
    (volume + bbox), `layers` counts. For a visual check, `export_geometry` + `scripts/render_geom.py`
    → PNG you can Read. `screenshot` is unreliable (other windows - TeamViewer, Claude - cover BricsCAD).
@@ -44,8 +70,8 @@ bbox, volume), `layers` (with entity counts), `extents`, `measure`, `delete` (ha
   `<name> - ΝΕΑ.dwg`.
 - When the user points at an element in a screenshot, identify it by bbox from `solids`/`entities`
   (the 4-entity pick list in their image names the layers under the cursor) and **state which one you
-  think it is** before changing it - once a neighbouring wall was changed by mistake. `(ssget "_I")`
-  usually returns nothing: their selection is gone by the time the command runs.
+  think it is** before changing it - once a neighbouring wall was changed by mistake. Best: ask them to
+  select it and call `selection` (add-in). Without the add-in `(ssget "_I")` usually returns nothing.
 
 ## LISP details
 

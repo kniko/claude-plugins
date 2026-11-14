@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BricsCAD add-in (NETLOAD) that serves the bricscad MCP server over a named pipe.
+       Build:  dotnet build -c Release   (BRICSCAD_DIR defaults to the V26 install folder) -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <AssemblyName>ClaudeBridge</AssemblyName>
+    <RootNamespace>ClaudeBridge</RootNamespace>
+    <Version>1.0.0</Version>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- BrxMgd references WindowsBase 4.0; harmless against the net8 one -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <BricscadDir Condition="'$(BRICSCAD_DIR)' != ''">$(BRICSCAD_DIR)</BricscadDir>
+    <BricscadDir Condition="'$(BRICSCAD_DIR)' == ''">C:\Program Files\Bricsys\BricsCAD V26 en_US</BricscadDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BrxMgd">
+      <HintPath>$(BricscadDir)\BrxMgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TD_Mgd">
+      <HintPath>$(BricscadDir)\TD_Mgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
