@@ -128,6 +128,7 @@ claude plugin marketplace remove local-tools
 - Ο `audit` κάνει παρόμοια δουλειά με το ενσωματωμένο `/code-review`. Ο `audit` τρέχει αυτόματα πριν το «τελείωσα», ενώ το `/code-review` το τρέχεις όποτε θες.
 - Ο agent `audit` δεν τρέχει σε worktree: ένα worktree ξεκινά από το default branch, χωρίς τις uncommitted αλλαγές σου, άρα δεν θα έβλεπε το diff.
 - Οι `audit` και `test-runner` έχουν Bash. Το ότι δεν αλλάζουν αρχεία το λένε οι οδηγίες τους, δεν το επιβάλλει το Claude Code. Ο `Explore` είναι τεχνικά read-only (μόνο Read, Grep, Glob).
+- **Δουλεύει δίπλα στο Claude Code Setup** (`claude-code-setup@claude-plugins-official`, της Anthropic): σύμφωνα με την καταχώρησή του στο marketplace αναλύει ένα codebase και προτείνει hooks, skills, MCP servers και subagents. Το repo-mode δεν το κάνει αυτό· ρυθμίζει models, effort και ανάθεση. Μπορείς να χρησιμοποιήσεις και τα δύο.
 - Ελάχιστες εκδόσεις Claude Code: `autoCompactWindow` v2.1.296+, Haiku 5.5 v2.1.293+, Sonnet 5.5 v2.1.284+, Opus 5.5 v2.1.280+, `omitClaudeMd` v2.1.271+. Οι παλαιότερες εκδόσεις απλώς αγνοούν τα πεδία που δεν ξέρουν.
 
 ## Πηγές

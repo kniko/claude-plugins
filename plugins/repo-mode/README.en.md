@@ -128,6 +128,7 @@ If a whole session is that kind of work, start that one session on Fable with `c
 - `audit` does similar work to the built-in `/code-review`. `audit` runs automatically before "done"; `/code-review` runs whenever you call it.
 - The `audit` agent doesn't run in a worktree: a worktree starts from the default branch without your uncommitted changes, so it wouldn't see the diff.
 - `audit` and `test-runner` have Bash. That they don't change files is stated in their instructions, not enforced by Claude Code. `Explore` is technically read-only (Read, Grep, Glob only).
+- **Works alongside Claude Code Setup** (`claude-code-setup@claude-plugins-official`, by Anthropic): per its marketplace entry it analyzes a codebase and recommends hooks, skills, MCP servers and subagents. repo-mode doesn't do that; it sets models, effort and delegation. Use both if you like.
 - Minimum Claude Code versions: `autoCompactWindow` v2.1.296+, Haiku 5.5 v2.1.293+, Sonnet 5.5 v2.1.284+, Opus 5.5 v2.1.280+, `omitClaudeMd` v2.1.271+. Older versions simply ignore fields they don't know.
 
 ## Sources

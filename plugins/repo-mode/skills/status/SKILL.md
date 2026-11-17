@@ -21,6 +21,7 @@ Read-only. Do not create, edit, or delete anything. Talk to the user in the lang
 4. Flag problems:
    - Advisor/main pairs that the pairing table in `${CLAUDE_PLUGIN_ROOT}/skills/setup/reference.md` rejects (e.g. Opus or `opusplan` main + Sonnet advisor, Sonnet 5.5 main + Haiku advisor).
    - Main model Opus/`opusplan`/Fable with no `CLAUDE_CODE_SUBAGENT_MODEL` and no project `Explore` agent: general-purpose, Plan and (on subscriptions) Explore subagents run on the expensive model.
+   - `ANTHROPIC_BASE_URL` set (in an `env` block of a settings file, or in the shell: test with `[ -n "$ANTHROPIC_BASE_URL" ]` and never print its value, it can carry credentials): a gateway or router sits between Claude Code and the API, as with tools like OmniRoute. Behind a gateway the built-in Explore runs on the `opus` alias's model and `fable` resolves differently (reference.md, "Subagent models and cost" and "escalate agent"), and the docs describe the advisor as Anthropic-API-only; whether it works through a given proxy isn't verified, so tell the user to check for the `Advisor Tool (experimental) is on` notification.
    - `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` set anywhere: it overrides the helper agents' own models.
    - `ultracode: true` in any settings file: every substantive task becomes a workflow at `xhigh` effort, which uses more tokens.
    - `model` / `advisorModel` / `effortLevel` set globally in `~/.claude/settings.json` (applies to every repo where repo-mode is off).

@@ -2,7 +2,12 @@
 
 All notable changes to **repo-mode**. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.8.1] - 2026-11-17
+
+### Added
+- `/repo-mode:status` flags `ANTHROPIC_BASE_URL` (a gateway or router such as OmniRoute): behind one the built-in Explore runs on the `opus` alias's model, `fable` resolves differently, and the advisor is documented as Anthropic-API-only. It tests whether the variable is set without printing its value.
+- Setup preflight suggests `/init` (never runs it) when the repo has no `CLAUDE.md` or `AGENTS.md`, since `test-runner` and `planner` read it.
+- README: a note that repo-mode works alongside Anthropic's `claude-code-setup` plugin.
 
 ### Changed
 - README diagrams now show the optional `researcher` and `planner` (dashed cards) and Round 1b of the wizard. Files renamed to `-v5` to bypass GitHub's image cache.
